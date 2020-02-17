@@ -96,7 +96,7 @@ t=90
 )
 )
 
-fig = go.Figure(data=[go.Scatter3d(z=df.values,x=coord_x,y=coord_z,mode='markers')],layout=layout)
+fig = go.Figure(data=[go.Surface(z=df.values,x=coord_x,y=coord_z)],layout=layout)
 fig.show()
 
 

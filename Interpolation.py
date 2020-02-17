@@ -5,11 +5,11 @@ file_f100 = open("aerodynamicloadf100.dat","r")
 lines = file_f100.readlines()
 
 #Inserting the values of the text file to a matrix 81 times 41
-matrix = np.zeros((81,41))
+matrix = np.zeros((81,41)) #81 rows 41 columns
 for line in lines:
     row = lines.index(line)
     line = line.replace("\n","")
     magnitude_list = line.split(",")
     matrix[row,:] = magnitude_list
 
-print(matrix)
+

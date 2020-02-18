@@ -90,8 +90,8 @@ y_axis = []
 for j in range(0,coeff_matrix.shape[0]):
     z_i_spline=coor_z[j]
     diff_z_spline=diff_z[j]
-    step_spline=np.linspace(0,diff_z[j],100) #Taking 100 steps for each spline
-    for step in range(len(step_spline-1)):
+    step_spline=np.linspace(0,diff_z[j],2) #Taking 100 steps for each spline
+    for step in range(len(step_spline)-1):
         spline_function = coeff_matrix[j,0]*(step_spline[step])**3+coeff_matrix[j,1]*(step_spline[step])**2+coeff_matrix[j,2]*(step_spline[step])+coeff_matrix[j,3]
         y_axis.append(spline_function)
         x_axis.append(z_i_spline+step_spline[step])

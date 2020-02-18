@@ -34,7 +34,7 @@ theta_x = np.zeros(Nx+1)
 for i in range(1,Nx+2):
     theta_x[i-1] = (i-1)*np.pi/Nx
 
-coor_x = np.zeros(Nz)
+coor_x = np.zeros(Nx)
 for i in range(1,Nx+1):
     coor_x = 1/2*(l_a/2*(1-np.cos(theta_x[i-1]))+l_a/2*(1-np.cos(theta_x[i])))
 
@@ -48,4 +48,5 @@ plt.plot(new_nodes,new_loading,'r-')
 #Plotting the points given from the .dat file
 plt.plot(coor_z,matrix_data[:,0],'o')
 
+plt.grid()
 plt.show()

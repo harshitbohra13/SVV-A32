@@ -1,4 +1,5 @@
 import numpy as np
+from Functions_Interpolation import find_interpolant, compute_interpolant
 import matplotlib.pyplot as plt
 
 
@@ -58,6 +59,24 @@ def interval_check(v1, v2, reference):
             break
 
     return I1_index, I2_index
+
+def integrate(nodes, coeff_matrix): #nodes is a list of the x or y position. data is aerodynamic data
+    area = 0
+    for i in range(coeff_matrix.size[0] - 1):
+        Ac = coeff_matrix[i][0]
+        Bc = coeff_matrix[i][1]
+        Cc = coeff_matrix[i][2]
+        Dc = coeff_matrix[i][3]
+
+        x1 = nodes[i]
+        x2 = nodes[i+1]
+        A1 = Ac*(1/4)*(x1**4) + Bc*(1/3)*(x1**3) + Cc*(1/2)*(x1**2) + Dc*x1
+        A2 = Ac * (1 / 4) * (x2 ** 4) + Bc * (1 / 3) * (x2 ** 3) + Cc * (1 / 2) * (x2 ** 2) + Dc * x2
+
+        dA = A1 - A2
+        area += dA
+
+    return area
 
 print(interval_check(0.3, 0.6, check))
 

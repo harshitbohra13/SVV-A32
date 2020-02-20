@@ -1,0 +1,42 @@
+# Ignore 'README.MD'
+README.MD
+
+# Ignore client logs
+Client/Logs
+
+#Ignore all compiler output files
+*.o
+*.d
+*.crf
+
+# Build files
+*.crf
+*.d
+*.o
+*.axf
+Software/**/*.htm
+*.lnp
+*.sct
+*.Bak
+*.bak
+*.dep
+*.scvd
+*.iex
+*.orig
+*.map
+*.lst
+
+# IDE
+.idea/
+cmake-build-debug/
+DebugConfig/
+
+# MacOS files
+*.icloud
+
+# Unix files
+*.swp
+
+# Python env
+venv/
+__pycache__/

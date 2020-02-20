@@ -1,4 +1,4 @@
-from Functions_Interpolation import find_interpolant,compute_interpolant
+from Functions_Interpolation import find_interpolant,compute_interpolant,integrate_polynomial,integrate_area
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
@@ -91,8 +91,6 @@ ax.set_xlabel('X-Axis [m] ~ Spanwise')
 ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
 ax.set_zlabel('Aerodynamic Loading [kPa]')
 
-plt.show()
-
 #Plotting the wireframe
 plt.figure(2)
 cp = plt.contour(X,Z,Y)
@@ -106,7 +104,28 @@ ax.set_zlabel('Aerodynamic Loading [kPa]')
 
 plt.show()
 
+#Finding the resultant force q in y-direction
+Areas_chordwise=[]
+for chord in range(0,number_x):
+    coeff_aerodata_chord = find_interpolant(new_nodes_z,aero_data[:,chord])
+    Area_chord = integrate_area(new_nodes_z,coeff_aerodata_chord)
+    Areas_chordwise.append(Area_chord)
+
+Areas_chordwise = np.array(Areas_chordwise)
+print(Areas_chordwise)
+coeff_aerodata_span = find_interpolant(new_nodes_x,Areas_chordwise)
+Resultant_q = integrate_area(new_nodes_x,coeff_aerodata_span)
+print(Resultant_q)
+
 print("Runtime: %f seconds" % (time.time()-start_time))
 
 
 
+
+#plt.show()
+
+
+#Finding the centroids in each chordwise:
+#print(find_interpolant(coor_z,matrix_data[:,0]).shape[0])
+#for i in range(0,Nx-1):
+#    integrate_area(coor_z,find_interpolant(coor_z,matrix_data[:,i]))

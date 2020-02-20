@@ -75,7 +75,7 @@ y_cent = 0
 
 # contribution to I due to circular part
 I_z_circ = (1/8)*pi*(h_a**3)*t_sk
-I_y_circ = (1/8)*pi*(h_a**3)*t_sk + A_circ*(z_circ-z_cent)**2 
+I_y_circ = (1/8)*pi*(h_a**3)*t_sk + A_circ*(0.5*h_a-z_cent)**2 
 
 # Contribution to I due to spar
 I_z_spar = (1/12)*t_sk*(h_a**3)

@@ -11,7 +11,7 @@ h_a = 16.1e-2   # aileron height [m]
 t_sk = 1.1e-3   # skin thickness [m]
 t_sp = 2.4e-3   # spar thickness [m]
 
-n_st = 11.      # number of stiffeners [-]
+n_st = 11       # number of stiffeners [-]
 t_st = 1.2e-3   # thickness of stiffener [m]
 h_st = 1.3e-2   # height of stiffener [m]
 w_st = 1.7e-2   # width of stiffener [m]
@@ -74,16 +74,18 @@ y_cent = 0
 #============ Calculate second moments of area ====================
 
 # contribution to I due to circular part
-I_z_circ = (1/8)*pi*(h_a**3)*t_sk
-I_y_circ = (1/8)*pi*(h_a**3)*t_sk + A_circ*(0.5*h_a-z_cent)**2 
+I_z_circ = (1/16)*pi*(h_a**3)*t_sk
+I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(0.5*h_a-z_cent)**2 
+#I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(z_circ-z_cent)**2 
 
 # Contribution to I due to spar
 I_z_spar = (1/12)*t_sk*(h_a**3)
 I_y_spar = 0 + A_spar*(z_spar-z_cent)**2 # only steiner term because thin-walled assumption
 
 # Contribution to I due to triangular part
-I_z_tri = 2 * ((1/12)*t_sk*((sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2))**3)*(sin(theta)**2) + ((0.25*h_a)**2)*t_sk*sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2))
-I_y_tri = 2 * ((1/12)*t_sk*((sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2))**3)*(cos(theta)**2) + ((z_tri-z_cent)**2)*t_sk*sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2))
+len_sk = sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2)
+I_z_tri = 2 * ((1/12)*t_sk*((len_sk)**3)*(sin(theta))**2 + ((0.25*h_a)**2)*t_sk*len_sk)
+I_y_tri = 2 * ((1/12)*t_sk*((len_sk)**3)*(cos(theta))**2 + ((z_tri-z_cent)**2)*t_sk*len_sk)
 
 # Contribution to I due to stiffeners
 I_z_stiff = 0
@@ -95,6 +97,7 @@ for i in range(len(B_y)):
 # Computation of total area moments about local z and y axes
 I_zz = I_z_circ + I_z_spar + I_z_tri + I_z_stiff # [m^4]
 I_yy = I_y_circ + I_y_spar + I_y_tri + I_y_stiff # [m^4]
+print('I_yy, I_zz = ',I_yy,', ',I_zz)
 
 #==================================================================
 

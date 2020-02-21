@@ -63,16 +63,16 @@ _ = crosssection.Izz                # moment of inertia about z-axis
 print('y,z =',crosssection.yc,' ,',crosssection.zc)
 print('Iyy,Izz =',crosssection.Iyy,', ',crosssection.Izz)
 ######################### Part III - Torsional stiffness calculations #######################################
-#### Primary functions
-#""" If you desire, you may disable this line, and manually overwrite the values listed between lines 60-62"""
-#crosssection.compute_shearcenter()   # Run the calculations
-#crosssection.compute_torsionalstiffness()   # Run the calculations
-#
-#### Access to important results
-#"""" If you desire, you can manually overwrite these values. """
-#_ = crosssection.ysc                 # y-coordinate of the centroid
-#_ = crosssection.zsc                 # z-coordinate of the centroid
-#_ = crosssection.J                   # torsional constant
+### Primary functions
+""" If you desire, you may disable this line, and manually overwrite the values listed between lines 60-62"""
+crosssection.compute_shearcenter()   # Run the calculations
+crosssection.compute_torsionalstiffness()   # Run the calculations
+
+### Access to important results
+"""" If you desire, you can manually overwrite these values. """
+_ = crosssection.ysc                 # y-coordinate of the centroid
+_ = crosssection.zsc                 # z-coordinate of the centroid
+_ = crosssection.J                   # torsional constant
 #
 ######################### Part IV - Deflection calculations #######################################
 #### Definition of additional parameters

@@ -74,7 +74,7 @@ y_cent = 0.
 print()
 print("Centroid location (z,y) = (",z_cent,",",y_cent,")")
 
-#============ Calculate second moments of area ====================
+#=================== Calculate second moments of area =======================
 
 # contribution to I due to circular part
 I_z_circ = (1/16)*pi*(h_a**3)*t_sk
@@ -122,11 +122,18 @@ ax.plot(-ycirc,-zcirc,'k') # plot bottom part semicircle
 ax.plot(zspar,yspar,'k')   # plot spar
 ax.plot(zskin,ytskin,'k')  # plot 
 ax.plot(zskin,ybskin,'k')
-ax.scatter(B_z,B_y,)
-ax.plot(z_cent,y_cent,'x')
+ax.scatter(B_z,B_y,label='Stiffeners')
+ax.plot(z_cent,y_cent,'x', label='Centroid')
+ax.arrow(0,0,0.035,0)
+ax.arrow(0,0,0,0.035)
+ax.text(0.035,0.01,"z'")
+ax.text(0.01,0.045,"y'")
+#matplotlib.pyplot.arrow(x, y, dx, dy, **kwargs)[source]¶
+
 plt.title('Cross-section of aileron')
 plt.ylabel('y [m]')
 plt.xlabel('z [m]')
-ax.set_xlim(0.05*c_a, -1.05*c_a)
-ax.set_ylim(-0.525*h_a, 0.525*h_a)
+ax.legend()
+ax.set_xlim(0.1*c_a, -1.05*c_a)
+ax.set_ylim(-h_a, h_a)
 plt.show()

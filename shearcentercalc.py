@@ -7,23 +7,37 @@ Created on Mon Feb 17 16:41:42 2020
 """
 import numpy as np
 import math
+from sympy.solvers import solve
+from sympy import Symbol
 import SVV_structural_properties as prop
 
 #to compute shear center 
 lsk = np.sqrt((prop.c_a-0.5*prop.h_a)**2 + (0.5*prop.h_a)**2)
 Sy = 1 
+area1 =  np.pi/2*(prop.h_a/2)**2
+area2 =  1/2*prop.h_a*(prop.c_a - prop.h_a/2)
 
-def get_qarc1():
+def get_redq():
+    q1 = Symbol('q1')
+    q2 = Symbol('q2')
+    # solve([2*q1*prop.h_a/prop.t_sp = 2 * prop.h_a*q2/prop.t_sp + q2*2*lsk/prop.t_sk, q1*(prop.h_a*np.pi/prop.t_sk + 2*h_a/tsk)], q1, )
+
+def get_qbooms():
+    q_booms = []
+    for i in range(0,11,1):
+        q_booms.append(1/prop.I_zz * prop.B_y * prop.A_perstiff)
+    return (q_booms)
+
+#sec - 1 (^
+def get_qsec1():
     theta = np.arange(0, np.pi/2, 0.01)
-    qarc1 = 0 
+    qsec1 = 0 
     for dtheta in theta: 
-        qarc1 = qarc1 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * 0.01 
-        
-    print(qarc1)
-        
-    qarc1 = qarc1 * Sy/prop.I_zz
-    return (qarc1)
-
+        qsec1 = qsec1 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * 0.01 
+                
+    qsec1 = qsec1 * Sy/prop.I_zz
+    return (qsec1)
+#sec - 2 |^
 def get_qsec2():
     qsec2 = 0
     y = np.arange(0, prop.h_a/2, 0.01)
@@ -40,9 +54,10 @@ def get_qsec3():
     for ds in s:
         qsec3 = qsec3 + prop.t_sk*(prop.h_a/2 - (prop.h_a/2)*ds/lsk)*0.01
                                    
-    qsec3 = qsec3*Sy/prop.I_zz + get_qarc1() + get_qsec2()    
-    return qsec3()
+    qsec3 = qsec3*Sy/prop.I_zz + get_qsec1() + get_qsec2()    
+    return (qsec3)
 
+#the slope after semi circle "/"
 def get_qsec4():
     s = np.arange(0, lsk, 0.01)
     qsec4 = 0
@@ -52,6 +67,7 @@ def get_qsec4():
     qsec4 = qsec4*Sy/prop.I_zz + get_qsec3()    
     return (qsec4)    
 
+#spar bot "|"
 def get_qsec5():
     qsec5 = 0
     y = np.arange(0, prop.h_a/2, 0.01)
@@ -63,6 +79,7 @@ def get_qsec5():
     qsec5 = qsec5*Sy/prop.I_zz
     return (qsec5)
 
+#bot semi circle
 def get_qsec6():
     theta = np.arange(0, -(np.pi/2), 0.01)
     qarc6 = 0 
@@ -73,9 +90,49 @@ def get_qsec6():
     return (qarc6)
 
 
+def get_qbcell1():
+    qbcell1 = []
+    qbcell1.append(get_qsec1())
+    qbcell1.append(get_qsec2())
+    qbcell1.append(get_qsec3())
+    qbcell1.append(get_qsec4())
+    qbcell1.append(get_qsec5())
+    qbcell1.append(get_qsec6())
+    return(qbcell1)
+
+def get_qs0():
+    qb, ds_t = get_intqb()
+    qs0 = sum(qb)/sum(ds_t)
+    return (qs0)
+
+def get_intqb():
+    qb = get_qbcell1()
+    ds_t = np.zeros(6)
+    for i in range(1,7):
+        if(i == 1 or i == 6):
+            ds_t[i-1] = (np.pi/2)*(prop.h_a/2)/prop.t_sk
+            qb[i-1] = qb[i-1]*ds_t[i-1]
+        if(i == 2 or i == 5):
+            ds_t[i-1] = (prop.h_a/2)/prop.t_sp
+            qb[i-1] = qb[i-1]*ds_t[i-1]
+        if(i == 3 or i == 4):
+            ds_t[i-1] = (lsk)/prop.t_sk
+            qb[i-1] = qb[i-1]*ds_t[i-1]
+    return (qb, ds_t)
+    
+def get_sc():
+    rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
+    theta  = np.arange(0, np.pi/2, 0.01)
+    theta1 = np.arange(-np.pi/2, 0, 0.01)
+     
+    lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
+          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * dtheta for dtheta in theta1)]
+    return(sum(lht)+ rht)
 
 
-
+print(get_qs0())
+print(get_sc())
+    
 
 
 

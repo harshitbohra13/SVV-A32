@@ -1,6 +1,7 @@
 import numpy as np
 from math import *
 from matplotlib import pyplot as plt
+from matplotlib.patches import Wedge
 
 #================= Data Fokker 100 =======================
 
@@ -33,7 +34,7 @@ B_y[10] = -(0.5*h_a)*sin(angle)
 B_z[10] = 0.5*h_a - (0.5*h_a)*cos(angle)
 # calculate 
 space = 2*s_st - (pi*0.5*h_a)/2  
-#slope = - ((h_a/2 - 0)/(c_a-h_a/2 - 0))
+slope = - ((h_a/2 - 0)/(c_a-h_a/2 - 0))
 theta = atan((h_a/2)/(c_a - h_a/2))
 
 B_y[2]=(h_a/2)-(space*sin(theta))
@@ -52,14 +53,15 @@ B_y[5]=B_y[4]-(s_st*sin(theta))
 B_z[5]=B_z[4]+(s_st*cos(theta))
 B_y[6]=-(B_y[4]-(s_st*sin(theta)))
 B_z[6]=B_z[4]+(s_st*cos(theta))
+B_z = -1*B_z
 
 #============= Calculate centroid location ======================
 
 # z component centroid location individual components [m]
-z_spar = 0.5*h_a
-z_circ = 0.5*h_a - h_a/pi
-z_tri = 0.5*h_a + 0.5* (c_a-0.5*h_a)
-z_stiff = sum(B_z)/len(B_z)
+z_spar = -1*(0.5*h_a)
+z_circ = -1*(0.5*h_a - h_a/pi)
+z_tri = -1*(0.5*h_a + 0.5* (c_a-0.5*h_a))
+z_stiff = (sum(B_z)/len(B_z))
 # areas individual components [m^2]
 A_spar = t_sp*h_a
 A_circ = pi*0.5*h_a*t_sk
@@ -68,14 +70,15 @@ A_stiff = n_st*t_st*(h_st+w_st) # total area of stiffeners
 
 # Centroid location aileron 
 z_cent = (z_spar*A_spar + z_circ*A_circ + z_tri*A_tri + z_stiff*A_stiff ) / (A_spar + A_circ + A_tri + A_stiff)
-y_cent = 0
-
+y_cent = 0.
+print()
+print("Centroid location (z,y) = (",z_cent,",",y_cent,")")
 
 #============ Calculate second moments of area ====================
 
 # contribution to I due to circular part
 I_z_circ = (1/16)*pi*(h_a**3)*t_sk
-I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(0.5*h_a-z_cent)**2 
+I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(-0.5*h_a-z_cent)**2 
 #I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(z_circ-z_cent)**2 
 
 # Contribution to I due to spar
@@ -97,7 +100,33 @@ for i in range(len(B_y)):
 # Computation of total area moments about local z and y axes
 I_zz = I_z_circ + I_z_spar + I_z_tri + I_z_stiff # [m^4]
 I_yy = I_y_circ + I_y_spar + I_y_tri + I_y_stiff # [m^4]
+print()
 print('I_yy, I_zz = ',I_yy,', ',I_zz)
 
-#==================================================================
+#============================ PLOTTING ====================================
 
+fig, ax = plt.subplots()
+
+ycirc = np.linspace(0,0.5*h_a,1000)
+zcirc = np.sqrt(-(ycirc-0.5*h_a)**2+(0.5*h_a)**2)
+
+zspar = np.full((1000, 1), -0.5*h_a)
+yspar = np.linspace(-0.5*h_a,0.5*h_a,1000)
+
+zskin = np.linspace(-0.5*h_a,-c_a,1000)
+ytskin = -slope*(zskin+0.5*h_a)+0.5*h_a
+ybskin = slope*(zskin+0.5*h_a)-0.5*h_a
+
+ax.plot(-ycirc,zcirc,'k')  # plot upper part cemicircle
+ax.plot(-ycirc,-zcirc,'k') # plot bottom part semicircle
+ax.plot(zspar,yspar,'k')   # plot spar
+ax.plot(zskin,ytskin,'k')  # plot 
+ax.plot(zskin,ybskin,'k')
+ax.scatter(B_z,B_y,)
+ax.plot(z_cent,y_cent,'x')
+plt.title('Cross-section of aileron')
+plt.ylabel('y [m]')
+plt.xlabel('z [m]')
+ax.set_xlim(0.05*c_a, -1.05*c_a)
+ax.set_ylim(-0.525*h_a, 0.525*h_a)
+plt.show()

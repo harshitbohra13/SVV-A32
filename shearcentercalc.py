@@ -107,7 +107,8 @@ def get_qbcell1():
 
 def get_qs0():
     qb, ds_t = get_intqb()
-    qs0 = sum(qb)/sum(ds_t)
+    qbooms = get_qbooms()
+    qs0 = (sum(qb)+sum(qbooms))/(sum(ds_t) + prop.A_stiff)
     return (qs0)
 
 def get_intqb():
@@ -127,14 +128,18 @@ def get_intqb():
     
 def get_sc():
     rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
-    theta  = np.arange(0, np.pi/2, 0.1)
-    theta1 = np.arange(-np.pi/2, 0, 0.1)
-    qbooms = get_qbooms()  
+    qbooms = get_qbooms()
+    theta  = np.zeros(round(np.pi/2*100))
+    theta.fill(0.01)
+    theta1 = np.zeros(round(np.pi/2*100))
+    theta1.fill(0.01)  
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
     lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
-          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * dtheta for dtheta in theta1),
+          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * -dtheta for dtheta in theta1),
+          get_qsec2()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
+          get_qsec5()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
           get_qsec3()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
           get_qsec4()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
           qbo]

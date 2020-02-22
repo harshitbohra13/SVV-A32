@@ -30,50 +30,54 @@ def get_qbooms():
 
 #sec - 1 (^
 def get_qsec1():
-    theta = np.arange(0, np.pi/2, 0.01)
+    delta = 0.01
+    theta = np.arange(0, np.pi/2, delta)
     qsec1 = 0 
     for dtheta in theta: 
-        qsec1 = qsec1 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * 0.01 
+        qsec1 = qsec1 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * delta 
                 
     qsec1 = qsec1 * Sy/prop.I_zz
     return (qsec1)
 #sec - 2 |^
 def get_qsec2():
     qsec2 = 0
-    y = np.arange(0, prop.h_a/2, 0.01)
+    delta = 0.01
+    y = np.arange(0, prop.h_a/2, delta)
     for dy in y:
-        qsec2 = qsec2 + prop.t_sp * dy * 0.01
+        qsec2 = qsec2 + prop.t_sp * dy * delta
     
     qsec2 = qsec2*Sy/prop.I_zz
     return (qsec2)
 
 #the slope after semi circle "\"
 def get_qsec3():
-    s = np.arange(0, lsk, 0.01)
+    delta = 0.01
+    s = np.arange(0, lsk, delta)
     qsec3 = 0
     for ds in s:
-        qsec3 = qsec3 + prop.t_sk*(prop.h_a/2 - (prop.h_a/2)*ds/lsk)*0.01
+        qsec3 = qsec3 + prop.t_sk*(prop.h_a/2 - (prop.h_a/2)*ds/lsk)*delta
                                    
     qsec3 = qsec3*Sy/prop.I_zz + get_qsec1() + get_qsec2()    
     return (qsec3)
 
 #the slope after semi circle "/"
 def get_qsec4():
-    s = np.arange(0, lsk, 0.01)
+    delta = 0.01
+    s = np.arange(0, lsk, delta)
     qsec4 = 0
     for ds in s:
-        qsec4 = qsec4 + prop.t_sk*((-prop.h_a/2*ds)/lsk)*0.01
+        qsec4 = qsec4 + prop.t_sk*((-prop.h_a/2*ds)/lsk)*delta
                                    
     qsec4 = qsec4*Sy/prop.I_zz + get_qsec3()    
     return (qsec4)    
 
 #spar bot "|"
 def get_qsec5():
+    delta = 0.01
     qsec5 = 0
-    y = np.arange(0, prop.h_a/2, 0.01)
+    y = np.arange(0, prop.h_a/2, delta)
     for dy in y:
-        qsec5 = qsec5 + prop.t_sp * dy * 0.01
-    
+        qsec5 = qsec5 + prop.t_sp * dy * delta
     qsec5 = -qsec5
     
     qsec5 = qsec5*Sy/prop.I_zz
@@ -81,10 +85,11 @@ def get_qsec5():
 
 #bot semi circle
 def get_qsec6():
-    theta = np.arange(0, -(np.pi/2), 0.01)
+    delta = 0.01
+    theta = np.arange(0, -(np.pi/2), delta)
     qarc6 = 0 
     for dtheta in theta: 
-        qarc6 = qarc6 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * 0.01 
+        qarc6 = qarc6 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * delta 
     qarc6 = -qarc6
     qarc6 = qarc6 *Sy/prop.I_zz + get_qsec4() - get_qsec5()
     return (qarc6)
@@ -122,14 +127,16 @@ def get_intqb():
     
 def get_sc():
     rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
-    theta  = np.arange(0, np.pi/2, 0.01)
-    theta1 = np.arange(-np.pi/2, 0, 0.01)
+    theta  = np.arange(0, np.pi/2, 0.1)
+    theta1 = np.arange(-np.pi/2, 0, 0.1)
     qbooms = get_qbooms()  
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
     lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
           sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * dtheta for dtheta in theta1),
+          get_qsec3()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
+          get_qsec4()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
           qbo]
     return(sum(lht)+ rht)
 

@@ -30,6 +30,7 @@ Software/**/*.htm
 .idea/
 cmake-build-debug/
 DebugConfig/
+.vscode/
 
 # MacOS files
 *.icloud

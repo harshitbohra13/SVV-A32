@@ -4,11 +4,11 @@
 Created on Mon Feb 17 16:41:42 2020
 
 @author: daanwitte
+@editor: harshitbohra
+
 """
 import numpy as np
 import math
-from sympy.solvers import solve
-from sympy import Symbol
 import SVV_structural_properties as prop
 
 #to compute shear center 
@@ -17,15 +17,15 @@ Sy = 1
 area1 =  np.pi/2*(prop.h_a/2)**2
 area2 =  1/2*prop.h_a*(prop.c_a - prop.h_a/2)
 
-def get_redq():
-    q1 = Symbol('q1')
-    q2 = Symbol('q2')
+# def get_redq():
+    # q1 = Symbol('q1')
+    # q2 = Symbol('q2')
     # solve([2*q1*prop.h_a/prop.t_sp = 2 * prop.h_a*q2/prop.t_sp + q2*2*lsk/prop.t_sk, q1*(prop.h_a*np.pi/prop.t_sk + 2*h_a/tsk)], q1, )
 
 def get_qbooms():
-    q_booms = []
-    for i in range(0,11,1):
-        q_booms.append(1/prop.I_zz * prop.B_y * prop.A_perstiff)
+    q_booms = np.zeros(prop.n_st)
+    for i in range(prop.n_st):
+        q_booms[i] = 1/prop.I_zz * prop.B_y[i] * prop.A_stiff/prop.n_st
     return (q_booms)
 
 #sec - 1 (^
@@ -124,9 +124,13 @@ def get_sc():
     rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
     theta  = np.arange(0, np.pi/2, 0.01)
     theta1 = np.arange(-np.pi/2, 0, 0.01)
-     
+    qbooms = get_qbooms()  
+    qbo = 0
+    for i in range(len(qbooms)):
+        qbo = qbo + (prop.B_z[i] * qbooms[i])    
     lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
-          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * dtheta for dtheta in theta1)]
+          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * dtheta for dtheta in theta1),
+          qbo]
     return(sum(lht)+ rht)
 
 

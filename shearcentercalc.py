@@ -26,6 +26,16 @@ def get_qbooms():
     q_booms = np.zeros(prop.n_st)
     for i in range(prop.n_st):
         q_booms[i] = 1/prop.I_zz * prop.B_y[i] * prop.A_stiff/prop.n_st
+    dq_booms = np.zeros(prop.n_st)
+    for i in range(3, prop.n_st-1, 1):
+        if(i<7):
+            dq_booms[i] = q_booms[i] + q_booms[i-1]
+        else:
+            dq_booms[i] = q_booms[i] - q_booms[i-1]
+    q_booms = dq_booms + q_booms
+    return(q_booms)
+
+        
     return (q_booms)
 
 #sec - 1 (^

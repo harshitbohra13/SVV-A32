@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.integrate import quad
 
-    
+'''
+Define fun with lamda constructor to define variables
+'''
 def integral(f, a, b, dx=10**(-5), steps=None):
 
     if steps is None and dx is not None:
@@ -12,12 +14,15 @@ def integral(f, a, b, dx=10**(-5), steps=None):
 
     else: raise ValueError
 
-    I = 0
-
+    I = 0 
     for i in range(int(steps)):
         I += f(a+i*dx)*dx
 
-    return I
+    return sum(I)
+
 
 f1 = lambda x: np.sin(x)
-print(integral(f1, 0, 3.14))
+x = np.arange(0,1,0.1)
+x = np.transpose(x)
+f1 = lambda x: np.arange(0, 1, 0.1)*x
+print(integral(f1, 0, 1, 0.1))

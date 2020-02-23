@@ -6,6 +6,9 @@ Created on Mon Feb 17 16:41:42 2020
 @author: daanwitte
 @editor: harshitbohra
 
+This file consists shear flow calculations.
+Stiffeners are reffered as booms since they are treated as point masses with areas
+
 """
 import numpy as np
 import math
@@ -23,20 +26,24 @@ area2 =  1/2*prop.h_a*(prop.c_a - prop.h_a/2)
     # solve([2*q1*prop.h_a/prop.t_sp = 2 * prop.h_a*q2/prop.t_sp + q2*2*lsk/prop.t_sk, q1*(prop.h_a*np.pi/prop.t_sk + 2*h_a/tsk)], q1, )
 
 def get_qbooms():
+    '''
+    This function  is used to calculate the q in all stiffeners
+    '''
     q_booms = np.zeros(prop.n_st)
     for i in range(prop.n_st):
         q_booms[i] = 1/prop.I_zz * prop.B_y[i] * prop.A_stiff/prop.n_st
     dq_booms = np.zeros(prop.n_st)
+    
+    dq_booms[10] =  q_booms[1] - q_booms[10] 
+
     for i in range(3, prop.n_st-1, 1):
-        if(i<7):
+        if(i<6):
             dq_booms[i] = q_booms[i] + q_booms[i-1]
-        else:
+        if(i>=6 and i<10):
             dq_booms[i] = q_booms[i] - q_booms[i-1]
     q_booms = dq_booms + q_booms
-    return(q_booms)
 
-        
-    return (q_booms)
+    return(q_booms)
 
 #sec - 1 (^
 def get_qsec1():
@@ -48,6 +55,7 @@ def get_qsec1():
                 
     qsec1 = qsec1 * Sy/prop.I_zz
     return (qsec1)
+
 #sec - 2 |^
 def get_qsec2():
     qsec2 = 0
@@ -105,24 +113,36 @@ def get_qsec6():
     return (qarc6)
 
 
-def get_qbcell1():
-    qbcell1 = []
-    qbcell1.append(get_qsec1())
-    qbcell1.append(get_qsec2())
-    qbcell1.append(get_qsec3())
-    qbcell1.append(get_qsec4())
-    qbcell1.append(get_qsec5())
-    qbcell1.append(get_qsec6())
-    return(qbcell1)
+def get_qbcell():
+    '''
+    Finds qb of both the cells
+    '''
+    qbcell = []
+    qbcell.append(get_qsec1())
+    qbcell.append(get_qsec2())
+    qbcell.append(get_qsec3())
+    qbcell.append(get_qsec4())
+    qbcell.append(get_qsec5())
+    qbcell.append(get_qsec6())
+    return(qbcell)
 
 def get_qs0():
+    '''
+    Basically finds the redundant shear flow created by stiffeners
+    and qb of sections.
+    '''
     qb, ds_t = get_intqb()
     qbooms = get_qbooms()
     qs0 = (sum(qb)+sum(qbooms))/(sum(ds_t) + prop.A_stiff)
     return (qs0)
 
 def get_intqb():
-    qb = get_qbcell1()
+    '''
+    This function calculates the integral of qb with respect to ds
+    Also ds as t is not constant. 
+    This is done for the compatibility equation, around shear center
+    '''
+    qb = get_qbcell()
     ds_t = np.zeros(6)
     for i in range(1,7):
         if(i == 1 or i == 6):
@@ -137,12 +157,17 @@ def get_intqb():
     return (qb, ds_t)
     
 def get_sc():
+    '''
+    This function calculates the sc from of z from center of the spar
+    It basically uses the shear equation, lht is integral of (p*q_b*ds)
+    rht is summation of (2*a*qs0) with respect to areas
+    '''
     rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
     qbooms = get_qbooms()
-    theta  = np.zeros(round(np.pi/2*100))
-    theta.fill(0.01)
-    theta1 = np.zeros(round(np.pi/2*100))
-    theta1.fill(0.01)  
+    theta  = np.zeros(round(np.pi/2*1000))
+    theta.fill(0.001)
+    theta1 = np.zeros(round(np.pi/2*1000))
+    theta1.fill(0.001)  
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
@@ -153,11 +178,12 @@ def get_sc():
           get_qsec3()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
           get_qsec4()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
           qbo]
-    return(sum(lht)+ rht)
+    return(sum(lht)+ rht,0)
+
 
 
 print(get_qs0())
-print(get_sc())
+print("sc(y,z) = ",get_sc())
     
 
 

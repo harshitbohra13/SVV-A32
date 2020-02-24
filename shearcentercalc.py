@@ -10,6 +10,15 @@ This file consists shear flow calculations.
 Stiffeners are reffered as booms since they are treated as point masses with areas
 
 """
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 17 16:41:42 2020
+@author: daanwitte
+@editor: harshitbohra
+This file consists shear flow calculations.
+Stiffeners are reffered as booms since they are treated as point masses with areas
+"""
 import numpy as np
 import math
 import SVV_structural_properties as prop
@@ -181,6 +190,8 @@ def get_sc():
     return(sum(lht)+ rht,0)
 
 
+<<<<<<< HEAD
+=======
 
 print(get_qs0())
 print("sc(y,z) = ",get_sc())
@@ -220,4 +231,7 @@ print("sc(y,z) = ",get_sc())
 #     LocationMatrix[i-1,1] = r*m.cos(RadiansPerLine*i+m.pi/2)
 #     LocationMatrix[i-1,2] = r*m.sin(RadiansPerLine*i-RadiansPerLine+m.pi/2)
 #     LocationMatrix[i-1,3] = r*m.sin(RadiansPerLine*i+m.pi/2)
+>>>>>>> aca36b25430aeded2fde525e52b3afa4f8fcb99b
 
+print(get_qs0())
+print("sc(y,z) = ",get_sc())

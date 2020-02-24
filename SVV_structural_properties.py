@@ -16,6 +16,8 @@ n_st = 11       # number of stiffeners [-]
 t_st = 1.2e-3   # thickness of stiffener [m]
 h_st = 1.3e-2   # height of stiffener [m]
 w_st = 1.7e-2   # width of stiffener [m]
+x = 1000
+
 
 
 #============= Calculate stiffener locations ===========================
@@ -77,12 +79,21 @@ print("Centroid location (z,y) = (",z_cent,",",y_cent,")")
 #=================== Calculate second moments of area =======================
 
 # contribution to I due to circular part
-I_z_circ = (1/16)*pi*(h_a**3)*t_sk
-I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(-0.5*h_a-z_cent)**2 
+I_z_circ = (1/16)*pi*(h_a**3)*t_sk 
+I_y_circ = (1/16)*pi*(h_a**3)*t_sk -A_circ*(h_a/pi)**2+A_circ*(z_circ-z_cent)**2 
 #I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(z_circ-z_cent)**2 
 
 # Contribution to I due to spar
-I_z_spar = (1/12)*t_sk*(h_a**3)
+I_z_spar = (1/12)*t_sp*(h_a**3)
+
+# contribution to I due to circular part
+I_z_circ = (1/16)*pi*(h_a**3)*t_sk
+I_y_circ = (1/16)*pi*(h_a**3)*t_sk -A_circ*(h_a/pi)**2+ A_circ*(z_circ-z_cent)**2 
+#I_y_circ = (1/16)*pi*(h_a**3)*t_sk + A_circ*(z_circ-z_cent)**2 
+
+# Contribution to I due to spar
+I_z_spar = (1/12)*t_sp*(h_a**3)
+
 I_y_spar = 0 + A_spar*(z_spar-z_cent)**2 # only steiner term because thin-walled assumption
 
 # Contribution to I due to triangular part

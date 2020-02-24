@@ -149,3 +149,24 @@ def integrate_polynomial(coefficients_array):
     b_matrix = np.transpose(np.dot(a_matrix,x_matrix))
     b_matrix = np.append(b_matrix,[0])
     return b_matrix
+
+def integrate_area(nodes,coeff_matrix): #nodes is a list of the x or y position. data is aerodynamic data
+    Area = 0
+    matrix_size = np.shape(coeff_matrix)[0]
+    for node in range(0,matrix_size):
+        Ac = coeff_matrix[node][0]
+        Bc = coeff_matrix[node][1]
+        Cc = coeff_matrix[node][2]
+        Dc = coeff_matrix[node][3]
+
+        Int = integrate_polynomial(np.array([Ac,Bc,Cc,Dc]))
+        x1=nodes[node]
+        x2=nodes[node+1]
+        Area_step=0
+        for power in range(1,len(Int)):
+            Int=Int[::-1]
+            dA = Int[power]*(x2**power-x1**power)
+            Area_step+=dA
+        Area +=Area_step
+
+    return Area

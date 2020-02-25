@@ -16,7 +16,6 @@ n_st = 11       # number of stiffeners [-]
 t_st = 1.2e-3   # thickness of stiffener [m]
 h_st = 1.3e-2   # height of stiffener [m]
 w_st = 1.7e-2   # width of stiffener [m]
-x = 1000
 
 
 
@@ -68,7 +67,7 @@ z_stiff = (sum(B_z)/len(B_z))
 A_spar = t_sp*h_a
 A_circ = pi*0.5*h_a*t_sk
 A_tri = 2*t_sk*sqrt((c_a-0.5*h_a)**2 + (0.5*h_a)**2)
-A_stiff = n_st*t_st*(h_st+w_st) # total area of stiffeners
+A_stiff = n_st*t_st*(h_st+w_st-t_st) # total area of stiffeners
 
 # Centroid location aileron 
 z_cent = (z_spar*A_spar + z_circ*A_circ + z_tri*A_tri + z_stiff*A_stiff ) / (A_spar + A_circ + A_tri + A_stiff)
@@ -105,8 +104,8 @@ I_y_tri = 2 * ((1/12)*t_sk*((len_sk)**3)*(cos(theta))**2 + ((z_tri-z_cent)**2)*t
 I_z_stiff = 0
 I_y_stiff = 0
 for i in range(len(B_y)): 
-    I_z_stiff = I_z_stiff + t_st*(h_st+w_st)*(B_y[i])**2          # add up all individual area moments
-    I_y_stiff = I_y_stiff + t_st*(h_st+w_st)*(B_z[i]-z_cent)**2   # from the stiffeners
+    I_z_stiff = I_z_stiff + t_st*(h_st+w_st-t_st)*(B_y[i])**2          # add up all individual area moments
+    I_y_stiff = I_y_stiff + t_st*(h_st+w_st-t_st)*(B_z[i]-z_cent)**2   # from the stiffeners
 
 # Computation of total area moments about local z and y axes
 I_zz = I_z_circ + I_z_spar + I_z_tri + I_z_stiff # [m^4]

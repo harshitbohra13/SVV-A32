@@ -15,6 +15,29 @@ lines = B737rpt_data.readlines()
 B737rpt_data.close()
 
 
+B737inp_data = open("B737_data/B737.inp","r")
+lines_inp = B737inp_data.readlines()
+
+data_points = []
+for i in range(9,6597): #get the coordinates of the data points
+    split_lines = lines_inp[i].split(",")
+    x_loc = float(split_lines[1])
+    y_loc = float(split_lines[2])
+    z_loc = float(split_lines[3])
+    data_points.append([x_loc, y_loc, z_loc])
+print("done with data points")
+
+node_sets = []
+for j in range(6598,13232): #gives the points belonging to each node
+    split_lines = lines_inp[j].split(",")
+    n1 = split_lines[1]
+    n2 = split_lines[2]
+    n3 = split_lines[3]
+    n4 = split_lines[4].rstrip('\n')
+    node_sets.append([n1, n2, n3, n4])
+data_array = np.array(node_sets)
+print("done with nodes")
+
 ##=============  STRESSES BENDING REGION 1  ================
 
 elementlabel    = []

@@ -10,15 +10,6 @@ This file consists shear flow calculations.
 Stiffeners are reffered as booms since they are treated as point masses with areas
 
 """
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 17 16:41:42 2020
-@author: daanwitte
-@editor: harshitbohra
-This file consists shear flow calculations.
-Stiffeners are reffered as booms since they are treated as point masses with areas
-"""
 import numpy as np
 import math
 import SVV_structural_properties as prop
@@ -32,10 +23,7 @@ area1 =  np.pi/2*(h)**2
 area2 =  1/2*prop.h_a*(prop.c_a - h)
 boareas = np.zeros(11)
 boareas.fill(prop.A_stiff) 
-G = 24 * 10^9 #pascals
-
-
-prop.I_yy,prop.I_zz = 4.5943507864451845e-05 ,  4.753851442684436e-06
+G = 28 * 10^9 #pascals
 
 # def get_redq():
     # q1 = Symbol('q1')
@@ -82,7 +70,7 @@ def get_qsec2():
     delta = 0.01
     y = np.arange(0,h,delta)
     for dy in y:
-        qsec2 += prop.t_sp * (-dy) * delta
+        qsec2 += prop.t_sp * (dy) * delta
     
     qsec2 = (-1) * Sy/prop.I_zz * qsec2 + get_qsec1()
     return (qsec2)
@@ -93,7 +81,7 @@ def get_qsec5():
     qsec5 = 0
     y = np.arange(0,h,delta)
     for dy in y:
-        qsec5 += prop.t_sp * dy * delta
+        qsec5 += prop.t_sp * (-dy) * delta
 
     qsec5 = (-1)*Sy/prop.I_zz *qsec5  
     return (qsec5)
@@ -106,17 +94,19 @@ def get_qsec6():
     qarc6 = 0 
 
     for dtheta in theta: 
-        qarc6 = qarc6 + prop.t_sk * h * np.sin(dtheta) * h * delta 
-    qarc6 = (-1) *Sy/prop.I_zz * (qarc6  + prop.B_y[10] * prop.A_stiff) + get_qsec4() - get_qsec5()
+        qarc6 = qarc6 + prop.t_sk * h * np.sin((-1)*dtheta) * h * delta 
+        
+    qarc6 = (-1) *Sy/prop.I_zz * (qarc6 + prop.B_y[10] * prop.A_stiff) + get_qsec4() - get_qsec5()
     
     return (qarc6)
 
+#\
 def get_qsec3():
     delta = 0.01
     s = np.arange(0, lsk, delta)
     qsec3 = 0
     for ds in s:
-        qsec3 += prop.t_sk*(h - h/lsk)*ds*delta
+        qsec3 += prop.t_sk*(h - h*ds/lsk)*delta
     for i in range(2, 6, 1):
         qsec3 += prop.B_y[i]*prop.A_stiff
 
@@ -176,25 +166,26 @@ def get_intqb():
     ds_t = np.zeros(6)
     ds1 = 0
     ds2 = 0
+
     for i in range(1,7):
         if(i == 1 or i == 6):
-            ds_t[i-1] = (np.pi/2)*(h)/prop.t_sk
-            ds1 += (np.pi/2)*(h)/prop.t_sk
+            ds_t[i-1] = (np.pi/2)*(h)/G*prop.t_sk
+            ds1 += (np.pi/2)*(h)/G*prop.t_sk
             qb[i-1] = qb[i-1]*ds_t[i-1]
             qb1 += qb[i-1]*ds_t[i-1]
 
         if(i == 2 or i == 5):
-            ds_t[i-1] = (h)/prop.t_sp
+            ds_t[i-1] = (h)/G*prop.t_sp
             qb[i-1] = qb[i-1]*ds_t[i-1]
-            ds1 += (h)/prop.t_sp
-            ds2 += (h)/prop.t_sp
+            ds1 += (h)/G*prop.t_sp
+            ds2 += (h)/G*prop.t_sp
             qb1 += qb[i-1]*ds_t[i-1]
             qb2 += qb[i-1]*ds_t[i-1]
         if(i == 3 or i == 4):
-            ds_t[i-1] = (lsk)/prop.t_sk
+            ds_t[i-1] = (lsk)/G*prop.t_sk
             qb[i-1] = qb[i-1]*ds_t[i-1]
             qb2 +=  qb[i-1]*ds_t[i-1]
-            ds2 += (lsk)/prop.t_sk 
+            ds2 += (lsk)/G*prop.t_sk 
 
     return (qb1, ds1, qb2, ds2)
     
@@ -213,7 +204,6 @@ def get_sc():
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
-<<<<<<< HEAD
     lht =[sum(h * get_qsec1() * delta * h * dtheta for dtheta in theta),
           sum(h * get_qsec6() * delta *  h * -dtheta for dtheta in theta1),
           get_qsec2()*h*prop.t_sp*0.5*prop.h_a,
@@ -221,57 +211,8 @@ def get_sc():
           get_qsec3()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
           get_qsec4()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
           ]
-    return((sum(lht)+ rht),0)
-=======
-    lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
-          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * -dtheta for dtheta in theta1),
-          get_qsec2()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
-          get_qsec5()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
-          get_qsec3()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
-          get_qsec4()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
-          qbo]
-    return(sum(lht)+ rht,0)
-
-
-<<<<<<< HEAD
-=======
-
-print(get_qs0())
-print("sc(y,z) = ",get_sc())
+    return(-(sum(lht)+ rht),0)
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# r = 0.0805
-# t = 0.0011
-# Vy = 1
-# x = 10
->>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
-
-
 print(get_sc())
 
-<<<<<<< HEAD
-=======
-# for i in range(1,x+1):
-#     LocationMatrix[i-1,0] = r*m.cos(RadiansPerLine*i+-RadiansPerLine+m.pi/2)
-#     LocationMatrix[i-1,1] = r*m.cos(RadiansPerLine*i+m.pi/2)
-#     LocationMatrix[i-1,2] = r*m.sin(RadiansPerLine*i-RadiansPerLine+m.pi/2)
-#     LocationMatrix[i-1,3] = r*m.sin(RadiansPerLine*i+m.pi/2)
->>>>>>> aca36b25430aeded2fde525e52b3afa4f8fcb99b
->>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
 
-print(get_qs0())
-print("sc(y,z) = ",get_sc())

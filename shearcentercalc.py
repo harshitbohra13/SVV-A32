@@ -72,7 +72,7 @@ def get_qsec2():
     for dy in y:
         qsec2 += prop.t_sp * (dy) * delta
     
-    qsec2 = (-1) * Sy/prop.I_zz * qsec2 + get_qsec1()
+    qsec2 = (-1) * Sy/prop.I_zz * qsec2 
     return (qsec2)
 
 #spar bot "|"
@@ -94,8 +94,8 @@ def get_qsec6():
     qarc6 = 0 
 
     for dtheta in theta: 
-        qarc6 = qarc6 + prop.t_sk * h * np.sin((-1)*dtheta) * h * delta 
-        
+        qarc6 += prop.t_sk * h * np.sin((-1)*dtheta) * h * delta 
+
     qarc6 = (-1) *Sy/prop.I_zz * (qarc6 + prop.B_y[10] * prop.A_stiff) + get_qsec4() - get_qsec5()
     
     return (qarc6)
@@ -204,14 +204,14 @@ def get_sc():
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
-    lht =[sum(h * get_qsec1() * delta * h * dtheta for dtheta in theta),
-          sum(h * get_qsec6() * delta *  h * -dtheta for dtheta in theta1),
+    lht =[sum((h*get_qsec1() * delta * h * dtheta for dtheta in theta)),
+          sum((h*get_qsec6() * delta * h * dtheta for dtheta in theta1)),
           get_qsec2()*h*prop.t_sp*0.5*prop.h_a,
           get_qsec5()*h*prop.t_sp*0.5*prop.h_a,
           get_qsec3()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
           get_qsec4()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
           ]
-    return(-(sum(lht)+ rht),0)
+    return((sum(lht)+ rht),0)
     
 print(get_sc())
 

@@ -24,10 +24,18 @@ import math
 import SVV_structural_properties as prop
 
 #to compute shear center 
-lsk = np.sqrt((prop.c_a-0.5*prop.h_a)**2 + (0.5*prop.h_a)**2)
+h = prop.h_a/2
+
+lsk = np.sqrt((prop.c_a-h)**2 + (h)**2)
 Sy = 1 
-area1 =  np.pi/2*(prop.h_a/2)**2
-area2 =  1/2*prop.h_a*(prop.c_a - prop.h_a/2)
+area1 =  np.pi/2*(h)**2
+area2 =  1/2*prop.h_a*(prop.c_a - h)
+boareas = np.zeros(11)
+boareas.fill(prop.A_stiff) 
+G = 24 * 10^9 #pascals
+
+
+prop.I_yy,prop.I_zz = 4.5943507864451845e-05 ,  4.753851442684436e-06
 
 # def get_redq():
     # q1 = Symbol('q1')
@@ -43,7 +51,7 @@ def get_qbooms():
         q_booms[i] = 1/prop.I_zz * prop.B_y[i] * prop.A_stiff/prop.n_st
     dq_booms = np.zeros(prop.n_st)
     
-    dq_booms[10] =  q_booms[1] - q_booms[10] 
+    dq_booms[10] = q_booms[1] - q_booms[10] 
 
     for i in range(3, prop.n_st-1, 1):
         if(i<6):
@@ -53,38 +61,66 @@ def get_qbooms():
     q_booms = dq_booms + q_booms
 
     return(q_booms)
-
+'''
+Area  1
+'''
+#--------------------------------------------------------------------------------------------
 #sec - 1 (^
 def get_qsec1():
     delta = 0.01
-    theta = np.arange(0, np.pi/2, delta)
+    theta = np.arange(0,np.pi/2,delta)
     qsec1 = 0 
     for dtheta in theta: 
-        qsec1 = qsec1 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * delta 
+        qsec1 += prop.t_sk * h * np.sin(dtheta) * h * delta 
                 
-    qsec1 = qsec1 * Sy/prop.I_zz
+    qsec1 =  ((-1) * Sy/prop.I_zz) *(qsec1 + prop.B_y[1]*prop.A_stiff)
     return (qsec1)
 
 #sec - 2 |^
 def get_qsec2():
     qsec2 = 0
     delta = 0.01
-    y = np.arange(0, prop.h_a/2, delta)
+    y = np.arange(0,h,delta)
     for dy in y:
-        qsec2 = qsec2 + prop.t_sp * dy * delta
+        qsec2 += prop.t_sp * (-dy) * delta
     
-    qsec2 = qsec2*Sy/prop.I_zz
+    qsec2 = (-1) * Sy/prop.I_zz * qsec2 + get_qsec1()
     return (qsec2)
 
-#the slope after semi circle "\"
+#spar bot "|"
+def get_qsec5():
+    delta = 0.01
+    qsec5 = 0
+    y = np.arange(0,h,delta)
+    for dy in y:
+        qsec5 += prop.t_sp * dy * delta
+
+    qsec5 = (-1)*Sy/prop.I_zz *qsec5  
+    return (qsec5)
+
+#bot semi circle
+def get_qsec6():
+    
+    delta = 0.01
+    theta = np.arange(0,np.pi/2,delta)
+    qarc6 = 0 
+
+    for dtheta in theta: 
+        qarc6 = qarc6 + prop.t_sk * h * np.sin(dtheta) * h * delta 
+    qarc6 = (-1) *Sy/prop.I_zz * (qarc6  + prop.B_y[10] * prop.A_stiff) + get_qsec4() - get_qsec5()
+    
+    return (qarc6)
+
 def get_qsec3():
     delta = 0.01
     s = np.arange(0, lsk, delta)
     qsec3 = 0
     for ds in s:
-        qsec3 = qsec3 + prop.t_sk*(prop.h_a/2 - (prop.h_a/2)*ds/lsk)*delta
-                                   
-    qsec3 = qsec3*Sy/prop.I_zz + get_qsec1() + get_qsec2()    
+        qsec3 += prop.t_sk*(h - h/lsk)*ds*delta
+    for i in range(2, 6, 1):
+        qsec3 += prop.B_y[i]*prop.A_stiff
+
+    qsec3 = (-1)* qsec3*Sy/prop.I_zz + get_qsec1() +  get_qsec2()    
     return (qsec3)
 
 #the slope after semi circle "/"
@@ -93,33 +129,14 @@ def get_qsec4():
     s = np.arange(0, lsk, delta)
     qsec4 = 0
     for ds in s:
-        qsec4 = qsec4 + prop.t_sk*((-prop.h_a/2*ds)/lsk)*delta
-                                   
-    qsec4 = qsec4*Sy/prop.I_zz + get_qsec3()    
-    return (qsec4)    
+        qsec4 += prop.t_sk*(-h/lsk)*ds*delta
 
-#spar bot "|"
-def get_qsec5():
-    delta = 0.01
-    qsec5 = 0
-    y = np.arange(0, prop.h_a/2, delta)
-    for dy in y:
-        qsec5 = qsec5 + prop.t_sp * dy * delta
-    qsec5 = -qsec5
-    
-    qsec5 = qsec5*Sy/prop.I_zz
-    return (qsec5)
+    for i in range(6, 10, 1):
+        qsec4 += prop.B_y[i]*prop.A_stiff
 
-#bot semi circle
-def get_qsec6():
-    delta = 0.01
-    theta = np.arange(0, -(np.pi/2), delta)
-    qarc6 = 0 
-    for dtheta in theta: 
-        qarc6 = qarc6 + prop.t_sk * prop.h_a/2 * np.sin(dtheta) * prop.h_a/2 * delta 
-    qarc6 = -qarc6
-    qarc6 = qarc6 *Sy/prop.I_zz + get_qsec4() - get_qsec5()
-    return (qarc6)
+    qsec4 = (-1)* qsec4*Sy/prop.I_zz + get_qsec3()    
+    return (qsec4)   
+
 
 
 def get_qbcell():
@@ -140,10 +157,12 @@ def get_qs0():
     Basically finds the redundant shear flow created by stiffeners
     and qb of sections.
     '''
-    qb, ds_t = get_intqb()
-    qbooms = get_qbooms()
-    qs0 = (sum(qb)+sum(qbooms))/(sum(ds_t) + prop.A_stiff)
-    return (qs0)
+    qb1, ds1, qb2, ds2 = get_intqb()
+    # qbooms = get_qbooms()
+    q01 = (qb1/ds1)
+    q02 = (qb2/ds2)
+
+    return (q01, q02)
 
 def get_intqb():
     '''
@@ -152,18 +171,32 @@ def get_intqb():
     This is done for the compatibility equation, around shear center
     '''
     qb = get_qbcell()
+    qb1 = 0
+    qb2 = 0
     ds_t = np.zeros(6)
+    ds1 = 0
+    ds2 = 0
     for i in range(1,7):
         if(i == 1 or i == 6):
-            ds_t[i-1] = (np.pi/2)*(prop.h_a/2)/prop.t_sk
+            ds_t[i-1] = (np.pi/2)*(h)/prop.t_sk
+            ds1 += (np.pi/2)*(h)/prop.t_sk
             qb[i-1] = qb[i-1]*ds_t[i-1]
+            qb1 += qb[i-1]*ds_t[i-1]
+
         if(i == 2 or i == 5):
-            ds_t[i-1] = (prop.h_a/2)/prop.t_sp
+            ds_t[i-1] = (h)/prop.t_sp
             qb[i-1] = qb[i-1]*ds_t[i-1]
+            ds1 += (h)/prop.t_sp
+            ds2 += (h)/prop.t_sp
+            qb1 += qb[i-1]*ds_t[i-1]
+            qb2 += qb[i-1]*ds_t[i-1]
         if(i == 3 or i == 4):
             ds_t[i-1] = (lsk)/prop.t_sk
             qb[i-1] = qb[i-1]*ds_t[i-1]
-    return (qb, ds_t)
+            qb2 +=  qb[i-1]*ds_t[i-1]
+            ds2 += (lsk)/prop.t_sk 
+
+    return (qb1, ds1, qb2, ds2)
     
 def get_sc():
     '''
@@ -171,15 +204,25 @@ def get_sc():
     It basically uses the shear equation, lht is integral of (p*q_b*ds)
     rht is summation of (2*a*qs0) with respect to areas
     '''
-    rht = 2 * area1 * get_qs0() + 2 * area2 * get_qs0()
+    q01, q02 = get_qs0()
+    rht = 2 * area1 * q01 + 2 * area2 * q02
     qbooms = get_qbooms()
-    theta  = np.zeros(round(np.pi/2*1000))
-    theta.fill(0.001)
-    theta1 = np.zeros(round(np.pi/2*1000))
-    theta1.fill(0.001)  
+    delta = 0.01
+    theta = np.arange(0, np.pi/2, delta)
+    theta1 = np.arange(0, np.pi/2, delta)
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
+<<<<<<< HEAD
+    lht =[sum(h * get_qsec1() * delta * h * dtheta for dtheta in theta),
+          sum(h * get_qsec6() * delta *  h * -dtheta for dtheta in theta1),
+          get_qsec2()*h*prop.t_sp*0.5*prop.h_a,
+          get_qsec5()*h*prop.t_sp*0.5*prop.h_a,
+          get_qsec3()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
+          get_qsec4()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
+          ]
+    return((sum(lht)+ rht),0)
+=======
     lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
           sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * -dtheta for dtheta in theta1),
           get_qsec2()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
@@ -215,23 +258,20 @@ print("sc(y,z) = ",get_sc())
 # t = 0.0011
 # Vy = 1
 # x = 10
+>>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
 
-# #The following will discretize the arc, by dividing it into x amount of equally long straight lines
-# #It will also find the location of these lines which can be used for shear centre calculations
-# #Dividing it into 10 lines for example, means 5 lines per quarter circle
-# #The first coordinates in the upcoming forloop, equals the coordinates of the line at the top of the arc
-# #The coordinates are measured from the center of the circle/arc
-# RadiansPerLine = m.pi/x
 
-# #The following matrix contains the x and y coordinates of each line at their starting and ending points
-# LocationMatrix = np.zeros((x,4))
+print(get_sc())
 
+<<<<<<< HEAD
+=======
 # for i in range(1,x+1):
 #     LocationMatrix[i-1,0] = r*m.cos(RadiansPerLine*i+-RadiansPerLine+m.pi/2)
 #     LocationMatrix[i-1,1] = r*m.cos(RadiansPerLine*i+m.pi/2)
 #     LocationMatrix[i-1,2] = r*m.sin(RadiansPerLine*i-RadiansPerLine+m.pi/2)
 #     LocationMatrix[i-1,3] = r*m.sin(RadiansPerLine*i+m.pi/2)
 >>>>>>> aca36b25430aeded2fde525e52b3afa4f8fcb99b
+>>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
 
 print(get_qs0())
 print("sc(y,z) = ",get_sc())

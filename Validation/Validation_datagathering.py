@@ -321,4 +321,4 @@ for i in range(59928,59944):
     RF1.append(rf1); RF2.append(rf2); RF3.append(rf3)
 jamstraight_nodal_RF_assembly = np.transpose(np.array([nodelabel,RF_magnitude,RF1,RF2,RF3]))
 
-
+print(bending_nodal_U)

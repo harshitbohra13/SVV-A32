@@ -16,6 +16,7 @@ n_st = 11       # number of stiffeners [-]
 t_st = 1.2e-3   # thickness of stiffener [m]
 h_st = 1.3e-2   # height of stiffener [m]
 w_st = 1.7e-2   # width of stiffener [m]
+x = 1000
 
 
 
@@ -104,7 +105,8 @@ I_y_tri = 2 * ((1/12)*t_sk*((len_sk)**3)*(cos(theta))**2 + ((z_tri-z_cent)**2)*t
 I_z_stiff = 0
 I_y_stiff = 0
 for i in range(len(B_y)): 
-    I_z_stiff = I_z_stiff + t_st*(h_st+w_st-t_st)*(B_y[i])**2          # add up all individual area moments
+    I_z_stiff = I_z_stiff + t_st*(h_st+w_st-t_st)*(
+    B_y[i])**2          # add up all individual area moments
     I_y_stiff = I_y_stiff + t_st*(h_st+w_st-t_st)*(B_z[i]-z_cent)**2   # from the stiffeners
 
 # Computation of total area moments about local z and y axes

@@ -10,6 +10,15 @@ This file consists shear flow calculations.
 Stiffeners are reffered as booms since they are treated as point masses with areas
 
 """
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 17 16:41:42 2020
+@author: daanwitte
+@editor: harshitbohra
+This file consists shear flow calculations.
+Stiffeners are reffered as booms since they are treated as point masses with areas
+"""
 import numpy as np
 import math
 import SVV_structural_properties as prop
@@ -204,6 +213,7 @@ def get_sc():
     qbo = 0
     for i in range(len(qbooms)):
         qbo = qbo + (prop.B_z[i] * qbooms[i])    
+<<<<<<< HEAD
     lht =[sum(h * get_qsec1() * delta * h * dtheta for dtheta in theta),
           sum(h * get_qsec6() * delta *  h * -dtheta for dtheta in theta1),
           get_qsec2()*h*prop.t_sp*0.5*prop.h_a,
@@ -212,8 +222,56 @@ def get_sc():
           get_qsec4()*lsk*prop.t_sk*(prop.c_a - h)*h/lsk,
           ]
     return((sum(lht)+ rht),0)
+=======
+    lht =[sum(prop.h_a/2 * get_qsec1() * prop.h_a/2 * dtheta for dtheta in theta),
+          sum(prop.h_a/2 * get_qsec6() *  prop.h_a/2 * -dtheta for dtheta in theta1),
+          get_qsec2()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
+          get_qsec5()*prop.h_a/2*prop.t_sp*0.5*prop.h_a,
+          get_qsec3()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
+          get_qsec4()*lsk*prop.t_sk*(prop.c_a - prop.h_a/2)*prop.h_a/2/lsk,
+          qbo]
+    return(sum(lht)+ rht,0)
+
+
+<<<<<<< HEAD
+=======
+
+print(get_qs0())
+print("sc(y,z) = ",get_sc())
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# r = 0.0805
+# t = 0.0011
+# Vy = 1
+# x = 10
+>>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
 
 
 print(get_sc())
 
+<<<<<<< HEAD
+=======
+# for i in range(1,x+1):
+#     LocationMatrix[i-1,0] = r*m.cos(RadiansPerLine*i+-RadiansPerLine+m.pi/2)
+#     LocationMatrix[i-1,1] = r*m.cos(RadiansPerLine*i+m.pi/2)
+#     LocationMatrix[i-1,2] = r*m.sin(RadiansPerLine*i-RadiansPerLine+m.pi/2)
+#     LocationMatrix[i-1,3] = r*m.sin(RadiansPerLine*i+m.pi/2)
+>>>>>>> aca36b25430aeded2fde525e52b3afa4f8fcb99b
+>>>>>>> 33251c40de7bc232407f5c57ff78683885e4a382
 
+print(get_qs0())
+print("sc(y,z) = ",get_sc())

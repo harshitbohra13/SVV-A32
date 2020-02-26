@@ -115,6 +115,26 @@ I_yy = I_y_circ + I_y_spar + I_y_tri + I_y_stiff # [m^4]
 print()
 print('I_yy, I_zz = ',I_yy,', ',I_zz)
 
+#============================ Polar moment of Inertia =====================
+
+T = 1
+r = h_a/2
+A1 = 0.5*pi*r**2
+A2 = (c_a-h_a/2)*h_a/2
+
+A = np.array([[(h_a/(2*A1*t_sp))+(pi*r)/(2*A1*t_sk),-h_a/(2*A1*t_sp),-1],
+              [-h_a/(2*A2*t_sp),(h_a/(2*A2*t_sp))+((2*len_sk)/(2*A2*t_sk)),-1],
+              [2*A1,2*A2,0]])
+
+B = np.array([0,0,T])
+
+x = np.linalg.solve(A,B)
+print("Matrix solution =",x)
+
+Gdsigmadz = x[2]
+J = T/(Gdsigmadz)
+print("J =",J)
+
 #============================ PLOTTING ====================================
 
 fig, ax = plt.subplots()
@@ -149,3 +169,6 @@ ax.legend()
 ax.set_xlim(0.1*c_a, -1.05*c_a)
 ax.set_ylim(-h_a, h_a)
 # plt.show()
+
+#========================== Verification ==================================
+

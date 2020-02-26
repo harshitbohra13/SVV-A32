@@ -197,6 +197,7 @@ def get_intqb():
             ds2 += (h)/G*prop.t_sp
             qb1 += qb[i-1]*ds_t[i-1]
             qb2 += qb[i-1]*ds_t[i-1]
+            
         if(i == 3 or i == 4):
             ds_t[i-1] = (lsk)/G*prop.t_sk
             qb[i-1] = qb[i-1]*ds_t[i-1]

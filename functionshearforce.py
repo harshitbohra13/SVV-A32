@@ -35,13 +35,11 @@ def costegrate(N, a, b):
 
     return num1
     
-def get_integral(N, a, b):
-    def f(x):
-        return x
+def get_integral(func, N, a, b):
     num0 = 0
     num1 = 0
     for i in range(1, N + 1):
-        num0 += f(a + (i-(1/2))*((a - b)/N))
+        num0 += func(a + (i-(1/2))*((a - b)/N))
     num1 = ((a - b)/N)*num0
     
     return num1
@@ -90,10 +88,10 @@ def get_qboom(section, dir):
         return(0)
 
 
-def get_qy(section, Sy, Izz, integral, t, y, N, a, b, qs0 = 0):
-    q = (t * integral(N,a,b) * y + get_qboom(section, "y"))
+def get_qy(section, Sy, Izz, f, N, a, b, qs0 = 0):
+    q = (get_integral(f,N,a,b) + get_qboom(section, "y"))
     return((-Sy/Izz  *  q) + qs0)
 
-def get_qz(section, Sz, Iyy, integral, t, z, N, a, b, qs0 = 0):
-    q = (t * integral(N,a,b) * z + get_qboom(section, "z"))
+def get_qz(section, Sz, Iyy, f, N, a, b, qs0 = 0):
+    q = (get_integral(f,N,a,b) + get_qboom(section, "z"))
     return((-Sz/Iyy *  q) + qs0)

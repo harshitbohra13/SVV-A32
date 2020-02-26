@@ -1,8 +1,11 @@
-from Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline,quadrupleintegrate_spline,positive
+from Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline,tripleintegrate_spline,quadrupleintegrate_spline,positive
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from shearcentercalc import get_sc, h, lsk
+import functionshearforce as sf
+import SVV_structural_properties as prop
 from scipy.integrate import quad
 
 ################DATA FOKKERF100##################
@@ -17,7 +20,14 @@ d1 = 0.00389 # m
 d3 = 0.01245  # m
 P = -49.2*1000  # N
 theta = 30*np.pi/180 #rad
+t_sk = 1.1e-3   # skin thickness [m]
+t_sp = 2.4e-3   # spar thickness [m]
+n_st = 11       # number of stiffeners [-]
+t_st = 1.2e-3   # thickness of stiffener [m]
+h_st = 1.3e-2   # height of stiffener [m]
+w_st = 1.7e-2   # width of stiffener [m]
 z_hat = -0.08439525605624261 #m
+z_cent = -0.20339801033636265
 Izz = 4.715268350076085e-06
 Iyy = 4.555812396709226e-05
 J = 7.748548555816593e-06
@@ -25,6 +35,7 @@ E = 72.9*10**9
 G = 27.1*10**9
 xI = x2 - xa / 2
 xII = x2 + xa / 2
+t_sk = 0.0011
 ################################################
 
 start_time = time.time()
@@ -36,10 +47,6 @@ lines = file_f100.readlines()
 #Variables
 Nz = 81
 Nx = 41
-C_a = 0.505
-l_a = 1.611
-resolution_span = 1 #mm
-resolution_chord = 1 #mm
 
 #Inserting the values of the text file to a matrix 81 times 41
 matrix_data = np.zeros((Nz,Nx))
@@ -56,7 +63,7 @@ for i in range(1,Nz+2):
 
 coor_z = np.zeros(Nz)
 for i in range(1,Nz+1):
-    coor_z[i-1] = -1/2*(C_a/2*(1-np.cos(theta_z[i-1]))+C_a/2*(1-np.cos(theta_z[i])))
+    coor_z[i-1] = -1/2*(Ca/2*(1-np.cos(theta_z[i-1]))+Ca/2*(1-np.cos(theta_z[i])))
 
 #X-Coordinate
 theta_x = np.zeros(Nx+1)
@@ -65,7 +72,7 @@ for i in range(1,Nx+2):
 
 coor_x = np.zeros(Nx)
 for i in range(1,Nx+1):
-    coor_x[i-1] = 1/2*(l_a/2*(1-np.cos(theta_x[i-1]))+l_a/2*(1-np.cos(theta_x[i])))
+    coor_x[i-1] = 1/2*(la/2*(1-np.cos(theta_x[i-1]))+la/2*(1-np.cos(theta_x[i])))
 
 #Diff_nodes
 diff_x = np.diff(coor_x)
@@ -149,6 +156,8 @@ for chord in range(0,Nx):
     Area_chord.append(Area_singlechord)
 Area_chord = np.array(Area_chord)
 
+print(integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1]))
+
 plt.figure(4)
 plt.plot(coor_x,Area_chord)
 
@@ -224,43 +233,38 @@ B_matrix = np.array([[P*np.sin(theta) + integrate_spline(coor_x,find_interpolant
 
 x_matrix = np.dot(np.linalg.inv(A_matrix), B_matrix)
 
-def Sy(x,x_matrix):
+def Sy(x):
     return x_matrix[0] * positive(x - x1, 0) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 0) + x_matrix[3] * positive(x - x2,0) - P * np.sin(theta) * positive(x - (xII), 0) + x_matrix[5] * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
 
-def Sz(x,x_matrix):
+def Sz(x):
     return x_matrix[1] * positive(x - x1, 0) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 0) + x_matrix[4] * positive(x - x2,0) - P * np.cos(theta) * positive(x - (xII), 0) + x_matrix[6] * positive(x - x3, 0)
 
-def Moment_y(x,x_matrix):
+def Moment_y(x):
     return x_matrix[1] * positive(x - x1, 1) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 1) + x_matrix[4] * positive(x - x2,1) - P * np.cos(theta) * positive(x - (xII), 1) + x_matrix[6] * positive(x - x3, 1)
 
-def Moment_z(x,x_matrix):
+def Moment_z(x):
     return x_matrix[0] * positive(x - x1, 1) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 1) + x_matrix[3] * positive(x - x2,1) - P * np.sin(theta) * positive(x - (xII), 1) + x_matrix[5] * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
 
-def T(x,x_matrix):
+def T(x):
     return -x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 0) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 0) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 0) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 0) - x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)
 
-def v(x,x_matrix):
+def v(x):
     return -(1 / (6 * E * Izz)) * (x_matrix[0] * positive(x - x1, 3) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 3) + x_matrix[3] * positive(x - x2,3) - P * np.sin(theta) * positive(x - (xII), 3) + x_matrix[5] * positive(x - x3, 3) - 6*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)) + x_matrix[9] * x + x_matrix[10]
 
-def w(x,x_matrix):
+def w(x):
     return -(1 / (6 * E * Iyy)) * (x_matrix[1] * positive(x - x1, 3) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 3) + x_matrix[4] * positive(x - x2,3) - P * np.cos(theta) * positive(x - (xII), 3) + x_matrix[6] * positive(x - x3, 3)) + x_matrix[7] * x + x_matrix[8]
 
-def Twist(x,x_matrix):
+def Twist(x):
     return (1 / (G * J)) * (-x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 1) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 1) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 1) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 1) -x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)) - x_matrix[11]
 
 plt.figure(5)
 x_axis = np.linspace(coor_x[0], coor_x[-1], 100)
 y_axis = np.array([])
 for i in range(len(x_axis)):
-    value = v(x_axis[i],x_matrix)
+    value = v(x_axis[i])
     y_axis = np.append(y_axis, value)
 plt.plot(x_axis, y_axis)
 plt.grid()
-plt.show()
-
-
-#Verification model (Check derivatives splines)
-
-
+#plt.show()
 
 print("Runtime: %f seconds" % (time.time()-start_time))

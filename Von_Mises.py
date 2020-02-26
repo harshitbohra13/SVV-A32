@@ -15,9 +15,7 @@ def Von_Mises(z, y, tau_yz, z_hat, My, Mz ):
     sigma_xx_y = Mz * y / Izz
 
     sigma_xx_total = sigma_xx_y + sigma_xx_z
-    sigma_vm =  np.square(0.5 * ((sigma_xx_total**2) + (-sigma_xx_total**2)) + 3*(tau_yz ** 2))
+    sigma_vm =  np.square(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
 
     return sigma_vm
 
-Iyy = 4.56
-Izz = 2.33

@@ -8,6 +8,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import csv
 
 
 B737rpt_data = open('B737_data/B737.rpt','r')
@@ -21,29 +22,30 @@ lines_inp = B737inp_data.readlines()
 data_points = []
 for i in range(9,6597): #get the coordinates of the data points
     split_lines = lines_inp[i].split(",")
+    nodelabel = int(split_lines[0])
     x_loc = float(split_lines[1])
     y_loc = float(split_lines[2])
-    z_loc = float(split_lines[3])
-    data_points.append([x_loc, y_loc, z_loc])
-print("done with data points")
+    z_loc = float(split_lines[3])-102.5 # place origin at leading edge to match reference frame of validation model with that of numerical model
+    data_points.append([nodelabel, x_loc, y_loc, z_loc])
+node_loc = np.array(data_points)
 
 node_sets = []
 for j in range(6598,13232): #gives the points belonging to each node
     split_lines = lines_inp[j].split(",")
-    n1 = split_lines[1]
-    n2 = split_lines[2]
-    n3 = split_lines[3]
-    n4 = split_lines[4].rstrip('\n')
-    node_sets.append([n1, n2, n3, n4])
-data_array = np.array(node_sets)
-print("done with nodes")
+    elementlabel = int(split_lines[0])
+    n1 = int(split_lines[1])
+    n2 = int(split_lines[2])
+    n3 = int(split_lines[3])
+    n4 = int(split_lines[4].rstrip('\n'))
+    node_sets.append([elementlabel, n1, n2, n3, n4])
+element_nodes = np.array(node_sets)
 
 ##=============  STRESSES BENDING REGION 1  ================
 
 elementlabel    = []
 S_mises         = []
 S_s12           = []
-for i in range(20,5797):
+for i in range(20,5798):
     line = lines[i].split(' ')
     line = [float(j) for j in line if j]
     line.remove(line[1])    
@@ -321,4 +323,41 @@ for i in range(59928,59944):
     RF1.append(rf1); RF2.append(rf2); RF3.append(rf3)
 jamstraight_nodal_RF_assembly = np.transpose(np.array([nodelabel,RF_magnitude,RF1,RF2,RF3]))
 
+<<<<<<< HEAD
 print(bending_nodal_U)
+=======
+bending_stress = np.vstack((bending_region1,bending_region2))
+jambent_stress = np.vstack((jambent_region1,jambent_region2))
+jamstraight_stress = np.vstack((jamstraight_region1,jamstraight_region2))
+
+bending     = {"stress":bending_stress,  
+               "U":bending_nodal_U, "Uassembly":bending_nodal_U_assembly,
+               "RF":bending_nodal_RF,"RFassembly":bending_nodal_RF_assembly}
+          
+jambent     = {"stress":jambent_stress, 
+               "U":jambent_nodal_U, "Uassembly":jambent_nodal_U_assembly,
+               "RF":jambent_nodal_RF,"RFassembly":jambent_nodal_RF_assembly}
+
+jamstraight = {"stress":jamstraight_stress, 
+               "U":jamstraight_nodal_U, "Uassembly":jamstraight_nodal_U_assembly,
+               "RF":jamstraight_nodal_RF,"RFassembly":jamstraight_nodal_RF_assembly}
+
+#tab = []
+#for node in node_loc[:,0]:
+#    eltab = []
+#    eltab = [int(node)]
+#    for element in element_nodes:
+#        if node in element[1:5]:
+#            eltab.append(element[0])
+#    tab.append(eltab)
+#
+#with open('nodes.txt', mode='w') as nodes_file:
+#    nodes_writer = csv.writer(nodes_file, delimiter=',')
+#    for i in range(len(tab)):
+#        nodes_writer.writerow(tab[i])
+#    
+        
+            
+
+            
+>>>>>>> 9eb696e7be368f7c724c946ae4ac834f2a65d96a

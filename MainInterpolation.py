@@ -1,8 +1,31 @@
-from Functions_Interpolation import find_interpolant,compute_interpolant,integrate_polynomial,integrate_area
+from Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline,quadrupleintegrate_spline,positive
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from scipy.integrate import quad
+
+################DATA FOKKERF100##################
+Ca = 0.505 #m
+la = 1.611 #m
+x1 = 0.125 #m
+x2 = 0.498 #m
+x3 = 1.494 #m
+xa = 0.245 #m
+ha = 0.161 #m
+d1 = 0.00389 # m
+d3 = 0.01245  # m
+P = -49.2*1000  # N
+theta = 30*np.pi/180 #rad
+z_hat = -0.08439525605624261 #m
+Izz = 4.715268350076085e-06
+Iyy = 4.555812396709226e-05
+J = 7.748548555816593e-06
+E = 72.9*10**9
+G = 27.1*10**9
+xI = x2 - xa / 2
+xII = x2 + xa / 2
+################################################
 
 start_time = time.time()
 
@@ -44,41 +67,13 @@ coor_x = np.zeros(Nx)
 for i in range(1,Nx+1):
     coor_x[i-1] = 1/2*(l_a/2*(1-np.cos(theta_x[i-1]))+l_a/2*(1-np.cos(theta_x[i])))
 
-#Finds the maximum spacing between nodes
-max_diff_coor_z = np.amax(np.abs(np.diff(coor_z)))
-
-#Number of steps needed between two MAIN NODES
-internal_z_points= int(np.ceil(max_diff_coor_z/(resolution_chord*10**(-3))))
-number_z = internal_z_points*(Nz)
-
-#Finds the maximum spacing between nodes
-max_diff_coor_x = np.amax(np.abs(np.diff(coor_x)))
-
-#Number of steps needed between two MAIN NODES
-internal_x_points=int(np.ceil(max_diff_coor_x/(resolution_span*10**(-3))))
-number_x = internal_x_points*(Nx)
-
-#Create a new aero_data
-new_matrix_data= np.zeros((number_z,Nx))
-
-#Increasing the grid-mesh chordwise
-for chord in range(0,Nx):
-    coeff_matrix_chord=find_interpolant(coor_z,matrix_data[:,chord])
-    new_nodes_z,y_line_z = compute_interpolant(coor_z,coeff_matrix_chord,resolution_chord)
-    new_matrix_data[:,chord]=y_line_z
-
-#Create a new aero_data
-aero_data= np.zeros((number_z,number_x))
-
-#Increasing the grid-mesh chordwise
-for span in range(0,number_z):
-    coeff_matrix_span=find_interpolant(coor_x,new_matrix_data[span,:])
-    new_nodes_x,y_line_x = compute_interpolant(coor_x,coeff_matrix_span,resolution_span)
-    aero_data[span,:]=y_line_x
+#Diff_nodes
+diff_x = np.diff(coor_x)
+diff_z = np.diff(coor_z)
 
 #Plotting a surface of the new aerodynamic loading
-X,Z = np.meshgrid(new_nodes_x,new_nodes_z)
-Y=aero_data
+X,Z = np.meshgrid(coor_x,coor_z)
+Y = matrix_data
 
 #Plotting the surfaces
 plt.figure(1)
@@ -102,30 +97,170 @@ ax.set_xlabel('X-Axis [m] ~ Spanwise')
 ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
 ax.set_zlabel('Aerodynamic Loading [kPa]')
 
-plt.show()
+#########INTERPOLATION################
+#Plot the interpolation
+#Plotting the scatter points with a resolution of maximum of 1 mm
+fig = plt.figure(3)
+ax = plt.axes(projection = '3d')
 
-#Finding the resultant force q in y-direction
-Areas_chordwise=[]
-for chord in range(0,number_x):
-    coeff_aerodata_chord = find_interpolant(new_nodes_z,aero_data[:,chord])
-    Area_chord = integrate_area(new_nodes_z,coeff_aerodata_chord)
-    Areas_chordwise.append(Area_chord)
+for chord in range(0,Nx):
+    coeff_matrix=find_interpolant(coor_z,matrix_data[:,chord])
+    y_line = []
+    z_line = np.linspace(coor_z[0],coor_z[-1],500)
+    for step in range(len(z_line)):
+        value = compute_value_interpolation(coor_z,coeff_matrix,z_line[step])[0]
+        y_line.append(value)
+    nodes_length=len(z_line)
+    x_line=coor_x[chord]*np.ones(nodes_length)
+    ax.scatter3D(x_line,z_line,y_line,marker='o')
 
-Areas_chordwise = np.array(Areas_chordwise)
-print(Areas_chordwise)
-coeff_aerodata_span = find_interpolant(new_nodes_x,Areas_chordwise)
-Resultant_q = integrate_area(new_nodes_x,coeff_aerodata_span)
-print(Resultant_q)
+for span in range(0,Nz):
+    coeff_matrix=find_interpolant(coor_x,matrix_data[span,:])
+    y_line = []
+    x_line = np.linspace(coor_x[0],coor_x[-1],500)
+    for step in range(len(z_line)):
+        value = compute_value_interpolation(coor_x,coeff_matrix,x_line[step])[0]
+        y_line.append(value)
+    nodes_length=len(x_line)
+    z_line=coor_z[span]*np.ones(nodes_length)
+    ax.scatter3D(x_line,z_line,y_line,marker='^')
 
-print("Runtime: %f seconds" % (time.time()-start_time))
-
-
-
-
+ax.set_xlabel('X-Axis [m]')
+ax.set_ylabel('Z-Axis [m]')
+ax.set_zlabel('Aerodynamic Loading [kPa]')
 #plt.show()
 
+#############INTEGRATION#############
+Area_sample=[]
+for i in range(0,Nz-1):
+    coeff_matrix = find_interpolant(coor_z, matrix_data[:,0])
+    a = coeff_matrix[i,0]
+    b = coeff_matrix[i, 1]
+    c = coeff_matrix[i, 2]
+    d = coeff_matrix[i, 3]
+    function = lambda x: a*(x-coor_z[i])**3+b*(x-coor_z[i])**2+c*(x-coor_z[i])+d
+    Area_sample.append(1000*quad(function,coor_z[i],coor_z[i+1]))
 
-#Finding the centroids in each chordwise:
-#print(find_interpolant(coor_z,matrix_data[:,0]).shape[0])
-#for i in range(0,Nx-1):
-#    integrate_area(coor_z,find_interpolant(coor_z,matrix_data[:,i]))
+####Integration chordwise
+Area_chord= []
+for chord in range(0,Nx):
+    coeff_matrix = find_interpolant(coor_z,matrix_data[:,chord])
+    Area_singlechord = 1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
+    Area_chord.append(Area_singlechord)
+Area_chord = np.array(Area_chord)
+
+plt.figure(4)
+plt.plot(coor_x,Area_chord)
+
+center_pressure = []
+for chord in range(0,Nx):
+    sum_z_load = []
+    sum_load = []
+    for span in range(0,Nz):
+        sum_z_load.append(matrix_data[span,chord]*coor_z[span])
+        sum_load.append(matrix_data[span, chord])
+    center_pressure.append(np.sum(sum_z_load)/np.sum(sum_load))
+center_pressure = np.array(center_pressure)
+
+arm = np.array(center_pressure-z_hat)
+
+torque_chord = []
+for chord in range(0,Nx):
+    torque_chord.append(Area_chord[chord]*arm[chord])
+torque_chord = np.array(torque_chord)
+
+######MainMatrix########
+
+## Row 1: Shear Sy(la)=0
+row1 = np.array([1,0,-np.sin(theta),1,0,1,0,0,0,0,0,0])
+
+## Row 2: Shear Sz(la)=0
+row2 = np.array([0,1,-np.cos(theta),0,1,0,1,0,0,0,0,0])
+
+## Row 3: My(la)=0
+row3 = np.array([0,(la-x1),-np.cos(theta)*(la-(xI)),0,(la-x2),0,(la-x3),0,0,0,0,0])
+
+## Row 4: Mz(la)=0
+row4 = np.array([la-x1,0,-np.sin(theta)*(la-(xI)),la-x2,0,la-x3,0,0,0,0,0,0])
+
+## Row 5: T(la)=0
+row5 = np.array([-(np.abs(z_hat)-ha/2),0,np.sin(theta)*(np.abs(z_hat)) - np.cos(theta)*ha/2,-(np.abs(z_hat)-ha/2),0,-(np.abs(z_hat)-ha/2),0,0,0,0,0,0])
+
+## Row 6: v(x1) + theta(x1)*(z_hat+ha/2)=d1*cos(theta0)
+row6 = np.array([-(1/(6*E*Izz))*(x1-x1)**3 - (1/(G*J))*(z_hat + ha/2)*(x1-x1)*(np.abs(z_hat) - ha/2),0,0,0,0,0,0,0,0,x1,1,(z_hat + ha/2)])
+
+## Row 7: v(x2) + theta(x2)*(z_hat+ha/2)=0
+row7 = np.array([-(1/(6*E*Izz))*(x2-x1)**3 - (1/(G*J))*(z_hat + ha/2)*(x2-x1)*(np.abs(z_hat) - ha/2),0,-(1/(6*E*Izz))*-np.sin(theta)*(x2-(xI))**3 + (1/(G*J))*(np.sin(theta)*np.abs(z_hat)*(x2-(xI)) - np.cos(theta)*ha/2*(x2-(xI)))*(z_hat + ha/2),-(1/(6*E*Izz))*(x2-x2)**3 - (1/(G*J))*(np.abs(z_hat) - ha/2)*(x2-x2)*(z_hat + ha/2),0,0,0,0,0,x2,1,(z_hat + ha/2)])
+
+## Row 8: v(x3) + theta(x3)*(z_hat+ha/2)=d3*cos(theta0)
+row8 = np.array([-(1/(6*E*Izz))*(x3-x1)**3 - (1/(G*J))*(z_hat + ha/2)*(x3-x1)*(np.abs(z_hat) - ha/2),0,-(1/(6*E*Izz))*-np.sin(theta)*(x3-(xI))**3 + (1/(G*J))*(np.sin(theta)*np.abs(z_hat)*(x3-(xI)) - np.cos(theta)*ha/2*(x3-(xI)))*(z_hat + ha/2),-(1/(6*E*Izz))*(x3-x2)**3 - (1/(G*J))*(np.abs(z_hat) - ha/2)*(x3-x2)*(z_hat + ha/2),0,-(1/(6*E*Izz))*(x3-x3)**3 - (1/(G*J))*(z_hat + ha/2)*(x3-x3)*(np.abs(z_hat) - ha/2),0,0,0,x3,1,(z_hat + ha/2)])
+
+## Row 9: w(x1) = -d1*sin(theta0)
+row9 = np.array([0,-(1/(6*E*Iyy))*(x1-x1)**3,0,0,0,0,0,x1,1,0,0,0])
+
+## Row 10: w(x2) = 0
+row10 = np.array([0,-(1/(6*E*Iyy))*(x2-x1)**3,(1/(6*E*Iyy))*np.cos(theta)*(x2-(xI))**3,0,-(1/(6*E*Iyy))*(x2-x2)**3,0,0,x2,1,0,0,0])
+
+## Row 11: w(x3) = -d3*sin(theta0)
+row11 = np.array([0,-(1/(6*E*Iyy))*(x3-x1)**3,(1/(6*E*Iyy))*np.cos(theta)*(x3-(xI))**3,0,-(1/(6*E*Iyy))*(x3-x2)**3,0,-(1/(6*E*Iyy))*(x3-x3)**3,x3,1,0,0,0])
+
+## Row 12: w(xI)*cos(theta) + v(xI)*sin(theta) - twist(xI)*abs(zsc)*sin(theta) = 0
+row12 = np.array([-(1/(6*E*Izz))*np.sin(theta)*(xI-x1)**3 + (1/(G*J))*np.sin(theta)*np.abs(z_hat)*(np.abs(z_hat)-ha/2),-(1/(6*E*Iyy))*np.cos(theta)*(xI-x1)**3,-(1/(6*E*Iyy))*np.cos(theta)*np.cos(theta)*(xI-xI)**3 - (1/(6*E*Izz))*np.sin(theta)*np.sin(theta)*(xI-xI)**3 + (1/(G*J))*np.abs(z_hat)*np.sin(theta)*np.sin(theta)*np.abs(z_hat)*(xI-xI),0,0,0,0,xI*np.cos(theta),np.cos(theta),xI*np.sin(theta),np.sin(theta),-np.abs(z_hat)*np.sin(theta)])
+
+A_matrix = np.array([row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11, row12])
+
+B_matrix = np.array([[P*np.sin(theta) + integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1])], #+q
+			   [P*np.cos(theta)],
+			   [P*np.cos(theta)*(la-(xII))],
+			   [P*np.sin(theta)*(la-(xII))+doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1])], #+q
+			   [P*(np.cos(theta)*ha/2 - np.abs(z_hat)*np.sin(theta))+integrate_spline(coor_x,find_interpolant(coor_x,torque_chord),coor_x[-1])],#-q
+			   [d1*np.cos(theta)-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x1)+1/(G*J)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x1)*(z_hat+ha/2)],#+(1/(E*Izz))*q -(1/(G*J))*q Add AeroTorque
+			   [-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x2)+1/(G*J)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x2)*(z_hat+ha/2)], #[(1/(E*Izz))*q - (1/(G*J))*q] Add Aero
+			   [d3*np.cos(theta) - (1/(6*E*Izz))*P*np.sin(theta)*(x3-(xII))**3 - (1/(G*J))*P*(z_hat + ha/2)*(x3-(xII))*(np.abs(z_hat)*np.sin(theta)-ha/2*np.cos(theta))-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x3)+1/(G*J)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x3)*(z_hat+ha/2)], # + (1/(E*Izz))*q  - (1/(G*J))*q Add Aero
+			   [-d1*np.sin(theta)],
+			   [0],
+			   [-d3*np.sin(theta) - (1/(6*E*Iyy))*P*np.cos(theta)*(x3-(xII))**3],
+			   [-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),xI)*np.sin(theta)+1/(G*J)*np.abs(z_hat)*np.sin(theta)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),xI)]]) #-(1/(G*J))*q Add Aero
+
+x_matrix = np.dot(np.linalg.inv(A_matrix), B_matrix)
+
+def Sy(x,x_matrix):
+    return x_matrix[0] * positive(x - x1, 0) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 0) + x_matrix[3] * positive(x - x2,0) - P * np.sin(theta) * positive(x - (xII), 0) + x_matrix[5] * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
+
+def Sz(x,x_matrix):
+    return x_matrix[1] * positive(x - x1, 0) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 0) + x_matrix[4] * positive(x - x2,0) - P * np.cos(theta) * positive(x - (xII), 0) + x_matrix[6] * positive(x - x3, 0)
+
+def Moment_y(x,x_matrix):
+    return x_matrix[1] * positive(x - x1, 1) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 1) + x_matrix[4] * positive(x - x2,1) - P * np.cos(theta) * positive(x - (xII), 1) + x_matrix[6] * positive(x - x3, 1)
+
+def Moment_z(x,x_matrix):
+    return x_matrix[0] * positive(x - x1, 1) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 1) + x_matrix[3] * positive(x - x2,1) - P * np.sin(theta) * positive(x - (xII), 1) + x_matrix[5] * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
+
+def T(x,x_matrix):
+    return -x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 0) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 0) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 0) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 0) - x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)
+
+def v(x,x_matrix):
+    return -(1 / (6 * E * Izz)) * (x_matrix[0] * positive(x - x1, 3) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 3) + x_matrix[3] * positive(x - x2,3) - P * np.sin(theta) * positive(x - (xII), 3) + x_matrix[5] * positive(x - x3, 3) - 6*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)) + x_matrix[9] * x + x_matrix[10]
+
+def w(x,x_matrix):
+    return -(1 / (6 * E * Iyy)) * (x_matrix[1] * positive(x - x1, 3) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 3) + x_matrix[4] * positive(x - x2,3) - P * np.cos(theta) * positive(x - (xII), 3) + x_matrix[6] * positive(x - x3, 3)) + x_matrix[7] * x + x_matrix[8]
+
+def Twist(x,x_matrix):
+    return (1 / (G * J)) * (-x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 1) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 1) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 1) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 1) -x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)) - x_matrix[11]
+
+plt.figure(5)
+x_axis = np.linspace(coor_x[0], coor_x[-1], 100)
+y_axis = np.array([])
+for i in range(len(x_axis)):
+    value = v(x_axis[i],x_matrix)
+    y_axis = np.append(y_axis, value)
+plt.plot(x_axis, y_axis)
+plt.grid()
+plt.show()
+
+
+#Verification model (Check derivatives splines)
+
+
+
+print("Runtime: %f seconds" % (time.time()-start_time))

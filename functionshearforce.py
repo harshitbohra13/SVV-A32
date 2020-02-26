@@ -1,16 +1,26 @@
 import numpy as np
 import SVV_structural_properties as prop
+import MainNewMatrixCalculation as Mat 
+from shearcentercalc import h, get_sc
 
-def forcetoshearcenter(F, z, y, theta=0):
-    M = 0
-    Fz = F*np.sin(theta)
-    Fy = F*np.cos(theta)
 
-    M += F*z
-    M += F*y
+z_sc, y_sc = get_sc()
 
-    return(Fz, Fy, M)
+class forces:
+    Sy = np.zeros(41)
+    Sz = np.zeros(41)
+    Ta = np.zeros(41)
 
+    def get_allvals(self): 
+         j = 0 
+         vals = np.linspace(0, Mat.la, num = 41)
+         for i in vals:
+            self.Sy[j] =  Mat.Sy(i)
+            self.Sz[j] =  Mat.Sz(i)
+            self.Ta[j] =  self.Sy[j]*(h + z_sc)
+            self.Ta[j] += Mat.T(i)
+            j+=1
+      
 def sintegrate(N, a, b):
     f = lambda x: np.sin(x)
     
@@ -44,11 +54,11 @@ def get_integral(func, N, a, b):
     
     return num1
 
-def get_q0(Fx, Fy, T):
+def get_q0(T):
     q01 = T/(2*prop.pi*0.5*(prop.h_a/2)**2)
     q02 = T/(2*0.5*(prop.c_a - prop.h_a/2)*prop.h_a)
-    q = [q01, q02]
-    return (q)
+    x = [[q01, q02]]
+    return (x)
 
 def get_qboom(section, dir):
     if(section == 1):
@@ -95,3 +105,4 @@ def get_qy(section, Sy, Izz, f, N, a, b, qs0 = 0):
 def get_qz(section, Sz, Iyy, f, N, a, b, qs0 = 0):
     q = (get_integral(f,N,a,b) + get_qboom(section, "z"))
     return((-Sz/Iyy *  q) + qs0)
+

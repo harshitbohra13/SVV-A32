@@ -55,54 +55,65 @@ def get_integral(func, N, a, b):
     return num1
 
 def get_q0(T):
-    q01 = T/(2*prop.pi*0.5*(prop.h_a/2)**2)
-    q02 = T/(2*0.5*(prop.c_a - prop.h_a/2)*prop.h_a)
-    x = [[q01, q02]]
-    return (x)
+    x = [[(2*0.5*(prop.c_a - prop.h_a/2)*prop.h_a), (2*prop.pi*0.5*(prop.h_a/2)**2)], 
+        [-1, 0.783]]
+    b = [T, 0]    
+    return (np.linalg.solve(x,b))
 
-def get_qboom(section, dir):
+def get_qboom(section, dir, s):
+    omega = np.tanh(h/(prop.c_a - h))
     if(section == 1):
-        if(dir == "y"):
-             return(prop.B_y[1] * prop.A_stiff)
-        else:
-             return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[1] * prop.A_stiff)
+        if((h-h*np.cos(s)) < prop.B_z[1]):
+            if(dir == "y"):
+                return(prop.B_y[1] * prop.A_stiff)
+            else:
+                return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[1] * prop.A_stiff)
+        elif(dir == "y"):
+            return(0.5* prop.B_z[0] * prop.A_stiff)
 
     if (section == 6):
-        if(dir == "y"):
-             return(prop.B_y[10] * prop.A_stiff)
-        else:
-             return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[10] * prop.A_stiff)
-
+        if((h-h*np.cos(s)) < prop.B_z[1]):
+            if(dir == "y"):
+                return(prop.B_y[10] * prop.A_stiff)
+            else:
+                return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[10] * prop.A_stiff)
+        elif(dir == "y"):
+            return(0.5* prop.B_z[0] * prop.A_stiff)
+    
     if (section == 3):
         qboom = 0
         if(dir == "y"):
             for i in range(2, 6, 1):
-                qboom += prop.B_y[i]*prop.A_stiff
+                if(prop.B_z[i] > (prop.c_a - h - s*np.cos(omega))):
+                    qboom += prop.B_y[i]*prop.A_stiff
             return(qboom)
         else:
             for i in range(2, 6, 1):
-                qboom += prop.B_z[i]*prop.A_stiff
+                if(prop.B_z[i] > (prop.c_a - h - s*np.cos(omega))):
+                    qboom += prop.B_z[i]*prop.A_stiff
             return(qboom)
   
     if (section == 4):
         qboom = 0
         if(dir == "y"):
             for i in range(6, 10, 1):
-                qboom += prop.B_y[i]*prop.A_stiff
+                if(prop.B_z[i] > (prop.c_a - h - s*np.cos(omega))):
+                    qboom += prop.B_y[i]*prop.A_stiff
             return(qboom)
         else:
             for i in range(6, 10, 1):
-                qboom += prop.B_z[i]*prop.A_stiff
+                if(prop.B_z[i] > (prop.c_a - h - s*np.cos(omega))):
+                    qboom += prop.B_z[i]*prop.A_stiff
             return(qboom)
     else:
         return(0)
 
 
 def get_qy(section, Sy, Izz, f, N, a, b, qs0 = 0):
-    q = (get_integral(f,N,a,b) + get_qboom(section, "y"))
+    q = (get_integral(f,N,a,b) + get_qboom(section, "y", b))
     return((-Sy/Izz  *  q) + qs0)
 
 def get_qz(section, Sz, Iyy, f, N, a, b, qs0 = 0):
-    q = (get_integral(f,N,a,b) + get_qboom(section, "z"))
+    q = (get_integral(f,N,a,b) + get_qboom(section, "z", b))
     return((-Sz/Iyy *  q) + qs0)
 

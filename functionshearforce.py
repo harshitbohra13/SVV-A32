@@ -68,7 +68,7 @@ def get_qboom(section, dir, s):
                 return(prop.B_y[1] * prop.A_stiff)
             else:
                 return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[1] * prop.A_stiff)
-        elif(dir == "y"):
+        elif(dir == "z"):
             return(0.5* prop.B_z[0] * prop.A_stiff)
 
     if (section == 6):
@@ -77,7 +77,7 @@ def get_qboom(section, dir, s):
                 return(prop.B_y[10] * prop.A_stiff)
             else:
                 return(0.5* prop.B_z[0] * prop.A_stiff + prop.B_z[10] * prop.A_stiff)
-        elif(dir == "y"):
+        elif(dir == "z"):
             return(0.5* prop.B_z[0] * prop.A_stiff)
     
     if (section == 3):

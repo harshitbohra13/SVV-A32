@@ -323,6 +323,9 @@ for i in range(59928,59944):
     RF1.append(rf1); RF2.append(rf2); RF3.append(rf3)
 jamstraight_nodal_RF_assembly = np.transpose(np.array([nodelabel,RF_magnitude,RF1,RF2,RF3]))
 
+<<<<<<< HEAD
+print(bending_nodal_U)
+=======
 bending_stress = np.vstack((bending_region1,bending_region2))
 jambent_stress = np.vstack((jambent_region1,jambent_region2))
 jamstraight_stress = np.vstack((jamstraight_region1,jamstraight_region2))
@@ -357,3 +360,4 @@ jamstraight = {"stress":jamstraight_stress,
             
 
             
+>>>>>>> 9eb696e7be368f7c724c946ae4ac834f2a65d96a

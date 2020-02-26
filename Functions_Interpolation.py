@@ -55,49 +55,6 @@ def find_interpolant(nodes,data):
     coeff_matrix = np.transpose(np.array([coeff_a_matrix, coeff_b_matrix, coeff_c_matrix, coeff_d_matrix]))
     return coeff_matrix
 
-def compute_interpolant(nodes,interpolant,resolution):
-    '''
-    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
-    :param NODES: ARRAY of the nodes, e.g. the nodes along the z-axis and x_axis
-    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
-    :param  RESOLUTION: Minimum spacing needed in millimiters [mm]
-    :return: 2 ARRAYS: -NEW_NODES
-                       -NEW_LOADING
-    '''
-
-    # Computes the step-size h_{i}=x_{i+1}-x_{i}
-    diff_nodes = np.diff(nodes)
-
-    #Finds the maximum spacing between nodes
-    max_diff_nodes = np.amax(np.abs(diff_nodes))
-
-    #Number of steps needed between two MAIN NODES
-    N = np.ceil(max_diff_nodes/(resolution*10**(-3)))+1
-
-    new_nodes = []
-    new_loading = []
-
-    for element in range(0, interpolant.shape[0]):
-        node_i_spline = nodes[element]
-        diff_node_spline = diff_nodes[element]
-        step_spline = np.linspace(0, diff_node_spline, N)  # Taking N steps for each spline
-        for step in range(len(step_spline) - 1):
-            spline_function = interpolant[element, 0] * (step_spline[step]) ** 3 + interpolant[element, 1] * (
-            step_spline[step]) ** 2 + interpolant[element, 2] * (step_spline[step]) + interpolant[element, 3]
-            new_loading.append(spline_function)
-            new_nodes.append(node_i_spline + step_spline[step])
-            if element==interpolant.shape[0]-1:
-                step+=1
-                new_nodes.append(nodes[-1])
-                spline_function = interpolant[element, 0] * (step_spline[step]) ** 3 + interpolant[element, 1] * (
-                step_spline[step]) ** 2 + interpolant[element, 2] * (step_spline[step]) + interpolant[element, 3]
-                new_loading.append(spline_function)
-
-    new_nodes = np.array(new_nodes)
-    new_loading = np.array(new_loading)
-
-    return new_nodes,new_loading
-
 def compute_value_interpolation(nodes,interpolant,position):
     '''
     The length of NODES and the ROWS of the INTERPOLANTS have to be equal
@@ -110,15 +67,21 @@ def compute_value_interpolation(nodes,interpolant,position):
 
     #Number of nodes
     N = len(nodes)
-
     location_spline = 0
 
     #Finding in which spline corresponds the location of the POSITION
     for element in range(0,N):
-        if nodes[element]<position<nodes[element+1] or nodes[element]>position>nodes[element+1] or nodes[element]==position:
+        if nodes[element]<position<nodes[element+1]:
             location_spline = element
             break;
-
+        elif nodes[element]>position>nodes[element+1]:
+            location_spline = element
+            break;
+        elif nodes[element]==position:
+            location_spline = element
+            break;
+    if location_spline == N-1:
+        location_spline = N-2
     #Computing RESULT using the cubic spline formula
     diff_position=position-nodes[element]
     a_coeff = interpolant[location_spline,0]
@@ -128,6 +91,84 @@ def compute_value_interpolation(nodes,interpolant,position):
     coeff_array = np.array([a_coeff,b_coeff,c_coeff,d_coeff])
     result = a_coeff*diff_position**3+b_coeff*diff_position**2+c_coeff*diff_position+d_coeff
     return result,coeff_array
+
+la= 1.611
+
+def integrate_spline(nodes,interpolant,position):
+    '''
+    :param nodes:
+    :param interpolant:
+    :param position:
+    :return:
+    '''
+    # Number of nodes
+    N = len(nodes)
+    diff_nodes = np.diff(nodes)
+
+    location_spline = 0
+
+    # Finding in which spline corresponds the location of the POSITION
+    for element in range(0, N):
+        if nodes[element] < position < nodes[element + 1]:
+            location_spline = element
+            break;
+        elif nodes[element] > position > nodes[element + 1]:
+            location_spline = element
+            break;
+        elif nodes[element] == position:
+            location_spline = element
+            break;
+    if location_spline == N - 1:
+        location_spline = N - 2
+    diff_position = position - nodes[element]
+
+    area_sum = 0
+    for row in range(0,location_spline+1):
+        if row < location_spline:
+            area_sum += (interpolant[row, 0]/4 * diff_nodes[row]**4 + interpolant[row,1]/3 * diff_nodes[row]**3 +
+                         interpolant[row,2]/2 * diff_nodes[row]**2 + interpolant[row,3] * diff_nodes[row])
+        elif row == location_spline:
+            diff = position - nodes[row]
+            area_sum += (interpolant[row,0]/4*diff**4 + interpolant[row,1]/3 * diff**3 + interpolant[row,2]/2 * diff**2+
+                         interpolant[row,3]*diff)
+    return area_sum
+
+def doubleintegrate_spline(nodes,interpolant,location):
+    first_integral = np.array([integrate_spline(nodes,interpolant,location_span) for location_span in nodes])
+    coeff_second = find_interpolant(nodes,first_integral)
+    second_integral = integrate_spline(nodes,coeff_second,location)
+    return second_integral
+
+def doubleintegrate_spline_loop(nodes,interpolant):
+    first_integral = np.array([integrate_spline(nodes,interpolant,location_span) for location_span in nodes])
+    coeff_second_spline = find_interpolant(nodes,first_integral)
+    second_integral_total = np.array([integrate_spline(nodes,coeff_second_spline,location_chord) for location_chord in nodes])
+    return second_integral_total
+
+def tripleintegrate_spline(nodes,interpolant,location):
+    double_integral = doubleintegrate_spline_loop(nodes,interpolant)
+    coeff_triple = find_interpolant(nodes,double_integral)
+    triple_integral = integrate_spline(nodes,coeff_triple,location)
+    return triple_integral
+
+def tripleintegrate_spline_loop(nodes,interpolant):
+    double_integral = doubleintegrate_spline_loop(nodes,interpolant)
+    coeff_triple_spline = find_interpolant(nodes,double_integral)
+    triple_integral = np.array([integrate_spline(nodes,coeff_triple_spline,location_span) for location_span in nodes])
+    return triple_integral
+
+def quadrupleintegrate_spline(nodes,interpolant,location):
+    triple_integral = tripleintegrate_spline_loop(nodes,interpolant)
+    coeff_quadruple = find_interpolant(nodes,triple_integral)
+    quadruple_integral = integrate_spline(nodes,coeff_quadruple,location)
+    return quadruple_integral
+
+def quadrupleintegrate_spline_loop(nodes,interpolant):
+    triple_integral = tripleintegrate_spline_loop(nodes,interpolant)
+    coeff_quadruple_spline = find_interpolant(nodes,triple_integral)
+    quadruple_integral = np.array([integrate_spline(nodes,coeff_quadruple_spline,location_span) for location_span in nodes])
+    return quadruple_integral
+
 
 def integrate_polynomial(coefficients_array):
     '''
@@ -170,3 +211,54 @@ def integrate_area(nodes,coeff_matrix): #nodes is a list of the x or y position.
         Area +=Area_step
 
     return Area
+
+def positive(x, power):
+    if power > 0 and x > 0:
+        return x ** power
+    elif power == 0 and x > 0:
+        return 1
+    else:
+        return 0
+
+#def compute_interpolant(nodes,interpolant,resolution):
+#    '''
+#    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+#    :param NODES: ARRAY of the nodes, e.g. the nodes along the z-axis and x_axis
+#    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+#    :param  RESOLUTION: Minimum spacing needed in millimiters [mm]
+#    :return: 2 ARRAYS: -NEW_NODES
+#                       -NEW_LOADING
+#    '''
+#
+#    # Computes the step-size h_{i}=x_{i+1}-x_{i}
+#    diff_nodes = np.diff(nodes)
+#
+#    #Finds the maximum spacing between nodes
+#    max_diff_nodes = np.amax(np.abs(diff_nodes))
+#
+#    #Number of steps needed between two MAIN NODES
+#    N = np.ceil(max_diff_nodes/(resolution*10**(-3)))+1
+#
+#   new_nodes = []
+#    new_loading = []
+#
+#    for element in range(0, interpolant.shape[0]):
+#        node_i_spline = nodes[element]
+#        diff_node_spline = diff_nodes[element]
+#        step_spline = np.linspace(0, diff_node_spline, N)  # Taking N steps for each spline
+#        for step in range(len(step_spline) - 1):
+#            spline_function = interpolant[element, 0] * (step_spline[step]) ** 3 + interpolant[element, 1] * (
+#            step_spline[step]) ** 2 + interpolant[element, 2] * (step_spline[step]) + interpolant[element, 3]
+#            new_loading.append(spline_function)
+#            new_nodes.append(node_i_spline + step_spline[step])
+#            if element==interpolant.shape[0]-1:
+#                step+=1
+#                new_nodes.append(nodes[-1])
+#                spline_function = interpolant[element, 0] * (step_spline[step]) ** 3 + interpolant[element, 1] * (
+#                step_spline[step]) ** 2 + interpolant[element, 2] * (step_spline[step]) + interpolant[element, 3]
+#                new_loading.append(spline_function)
+#
+#    new_nodes = np.array(new_nodes)
+#    new_loading = np.array(new_loading)
+#
+#    return new_nodes,new_loading

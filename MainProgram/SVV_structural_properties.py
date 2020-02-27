@@ -3,7 +3,7 @@ from math import *
 from matplotlib import pyplot as plt
 import Data as data
 
-#================= Data Fokker 100 =======================
+#================= Data =======================================================
 
 Ca = data.Ca     # chord length aileron [m]
 la = data.la     # span of the aileron [m]
@@ -18,44 +18,42 @@ h_st = data.h_st  # height of stiffener [m]
 w_st = data.w_st   # width of stiffener [m]
 x = 1000
 
-#============= Calculate stiffener locations ===========================
+#============= Calculate stiffener locations ==================================
 
 circ = pi*0.5*ha + 2*sqrt((Ca - 0.5*ha)**2. + (0.5*ha)**2.) # circumference of aileron
 s_st = circ/n_st # stiffener spacing [m]
 
 # set up arrays for x and y locations of stiffener areas
-B_z = np.zeros(11)
-B_y = np.zeros(11)
+B_z = np.zeros(n_st)
+B_y = np.zeros(n_st)
 
 angle = s_st / (0.5*ha) # polar coordinate of the stiffener in the circular part
+
 B_y[1] = (0.5*ha)*sin(angle) 
 B_z[1] = 0.5*ha - (0.5*ha)*cos(angle)
-B_y[10] = -(0.5*ha)*sin(angle)
-B_z[10] = 0.5*ha - (0.5*ha)*cos(angle)
+B_y[int(n_st)-1] = -(0.5*ha)*sin(angle)
+B_z[int(n_st)-1] = 0.5*ha - (0.5*ha)*cos(angle)
 # calculate 
 space = 2*s_st - (pi*0.5*ha)/2  
 slope = - ((ha/2 - 0)/(Ca-ha/2 - 0))
 theta = atan((ha/2)/(Ca - ha/2))
 
-B_y[2]=(ha/2)-(space*sin(theta))
-B_z[2]=(ha/2)+(space*cos(theta))
-B_y[9]=-((ha/2)-(space*sin(theta)))
-B_z[9]=(ha/2)+(space*cos(theta))
-B_y[3]=B_y[2]-(s_st*sin(theta))
-B_z[3]=B_z[2]+(s_st*cos(theta))
-B_y[8]=-(B_y[2]-(s_st*sin(theta)))
-B_z[8]=B_z[2]+(s_st*cos(theta))
-B_y[4]=B_y[3]-(s_st*sin(theta))
-B_z[4]=B_z[3]+(s_st*cos(theta))
-B_y[7]=-(B_y[3]-(s_st*sin(theta)))
-B_z[7]=B_z[3]+(s_st*cos(theta))
-B_y[5]=B_y[4]-(s_st*sin(theta))
-B_z[5]=B_z[4]+(s_st*cos(theta))
-B_y[6]=-(B_y[4]-(s_st*sin(theta)))
-B_z[6]=B_z[4]+(s_st*cos(theta))
+for i in range(2,int((n_st-1)/2)+1):
+    if i == 2:
+        B_y[i]=(ha/2)-(space*sin(theta))
+        B_z[i]=(ha/2)+(space*cos(theta))
+    else:
+        B_y[i]=B_y[i-1]-(s_st*sin(theta))
+        B_z[i]=B_z[i-1]+(s_st*cos(theta))
+k=2
+for j in range(i+1,int(n_st)-1):
+    B_y[j]=-B_y[k]
+    B_z[j]=B_z[k]
+    k+=1
+    
 B_z = -1*B_z
 
-#============= Calculate centroid location ======================
+#============= Calculate centroid location ====================================
 
 # z component centroid location individual components [m]
 z_spar = -1*(0.5*ha)
@@ -74,7 +72,7 @@ y_cent = 0.
 print()
 print("Centroid location (z,y) = (",z_cent,",",y_cent,")")
 
-#=================== Calculate second moments of area =======================
+#=================== Calculate second moments of area =========================
 
 # contribution to I due to circular part
 I_z_circ = (1/16)*pi*(ha**3)*t_sk 
@@ -113,7 +111,7 @@ I_yy = I_y_circ + I_y_spar + I_y_tri + I_y_stiff # [m^4]
 print()
 print('I_yy, I_zz = ',I_yy,', ',I_zz)
 
-#============================ Polar moment of Inertia =====================
+#============================ Polar moment of Inertia =========================
 
 T = 1
 r = ha/2
@@ -133,7 +131,7 @@ Gdsigmadz = x[2]
 J = T/(Gdsigmadz)
 print("J =",J)
 
-#============================ PLOTTING ====================================
+#============================ PLOTTING ========================================
 
 fig, ax = plt.subplots()
 
@@ -168,5 +166,5 @@ ax.set_xlim(0.1*Ca, -1.05*Ca)
 ax.set_ylim(-ha, ha)
 # plt.show()
 
-#========================== Verification ==================================
+#========================== Verification ======================================
 

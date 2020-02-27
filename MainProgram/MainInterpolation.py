@@ -322,10 +322,8 @@ axs[1].grid()
 
 
 ####################AIRFOIL - STRESSES##########################
-location = 0.5 #[m] #Location of the cross section
+location = 0.4 #[m] #Location of the cross section
 h = ha/2 #cm
-
-q1,q2,q3,q4,q5,q6 = shearstress(location,Sy(location),Sz(location),T(location))
 
 #Step for each point
 step=1000
@@ -355,15 +353,20 @@ z6=z1
 y6=-y1
 
 #############SHEAR-FLOWS######################
+q1,q2,q3,q4,q5,q6 = shearstress(location,Sy(location),Sz(location),T(location))
+q4 = q4[::-1]
+q6 = q6[::-1]
+
+
 plt.figure(7)
 #Plot all the sections
 marker_size = 15
 plt.scatter(-z3,y3,marker_size,q3)
-plt.scatter(-z4,y4,marker_size,q4[::-1])
+plt.scatter(-z4,y4,marker_size,q4)
 plt.scatter(-z2,y2,marker_size,q2)
 plt.scatter(-z5,y5,marker_size,q5)
 plt.scatter(-z1,y1,marker_size,q1)
-plt.scatter(-z6,y6,marker_size,q6[::-1])
+plt.scatter(-z6,y6,marker_size,q6)
 cbar = plt.colorbar()
 plt.title('Shear Flow Distribution')
 plt.ylabel('y[m]')
@@ -386,12 +389,12 @@ sigma_5 = []
 sigma_6 = []
 
 for n in range(0,step):
-    sigma_3.append(direct_stress(Moment_y(location),Moment_z(location),-z3[n],y3[n]))
-    sigma_4.append(direct_stress(Moment_y(location), Moment_z(location), -z4[n], y4[n]))
-    sigma_2.append(direct_stress(Moment_y(location), Moment_z(location), -z2[n], y2[n]))
-    sigma_5.append(direct_stress(Moment_y(location), Moment_z(location), -z5[n], y5[n]))
-    sigma_1.append(direct_stress(Moment_y(location), Moment_z(location), -z1[n], y1[n]))
-    sigma_6.append(direct_stress(Moment_y(location), Moment_z(location), -z6[n], y6[n]))
+    sigma_3.append(direct_stress(Moment_y(location),Moment_z(location),-(z3[n]),y3[n]))
+    sigma_4.append(direct_stress(Moment_y(location), Moment_z(location), -(z4[n]), y4[n]))
+    sigma_2.append(direct_stress(Moment_y(location), Moment_z(location), -(z2[n]), y2[n]))
+    sigma_5.append(direct_stress(Moment_y(location), Moment_z(location), -(z5[n]), y5[n]))
+    sigma_1.append(direct_stress(Moment_y(location), Moment_z(location), -(z1[n]), y1[n]))
+    sigma_6.append(direct_stress(Moment_y(location), Moment_z(location), -(z6[n]), y6[n]))
 
 plt.figure(8)
 #Plot all the sections
@@ -407,6 +410,47 @@ plt.title('Direct Stress Distribution')
 plt.ylabel('y[m]')
 plt.xlabel('-z[m]')
 cbar.set_label('$sigma_{xx}$[N/m^2]')
+plt.grid()
+
+def VonMises(My, Mz,tau_yz,z, y):
+
+    sigma_xx_z = My * (z - z_hat) / Iyy
+    sigma_xx_y = Mz * y / Izz
+
+    sigma_xx_total = sigma_xx_y + sigma_xx_z
+    sigma_vm =  np.square(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
+
+    return sigma_vm
+
+vonMises_1 = []
+vonMises_2 = []
+vonMises_3 = []
+vonMises_4 = []
+vonMises_5 = []
+vonMises_6 = []
+
+for n in range(0,step):
+    vonMises_3.append(VonMises(Moment_y(location),Moment_z(location),q3[n]/t_sk,-(z3[n]),y3[n]))
+    vonMises_4.append(VonMises(Moment_y(location), Moment_z(location),q4[n]/t_sk, -(z4[n]), y4[n]))
+    vonMises_2.append(VonMises(Moment_y(location), Moment_z(location),q2[n]/t_sp, -(z2[n]), y2[n]))
+    vonMises_5.append(VonMises(Moment_y(location), Moment_z(location),q5[n]/t_sp, -(z5[n]), y5[n]))
+    vonMises_1.append(VonMises(Moment_y(location), Moment_z(location),q1[n]/t_sk, -(z1[n]), y1[n]))
+    vonMises_6.append(VonMises(Moment_y(location), Moment_z(location),q6[n]/t_sk, -(z6[n]), y6[n]))
+
+plt.figure(9)
+#Plot all the sections
+marker_size = 15
+plt.scatter(-z3,y3,marker_size,vonMises_3)
+plt.scatter(-z4,y4,marker_size,vonMises_4)
+plt.scatter(-z2,y2,marker_size,vonMises_2)
+plt.scatter(-z5,y5,marker_size,vonMises_5)
+plt.scatter(-z1,y1,marker_size,vonMises_1)
+plt.scatter(-z6,y6,marker_size,vonMises_6)
+cbar = plt.colorbar()
+plt.title('Von Mises Stress Distribution')
+plt.ylabel('y[m]')
+plt.xlabel('-z[m]')
+cbar.set_label('$sigma_{vm}$[N/m^2]')
 plt.grid()
 
 print("Runtime: %f seconds" % (time.time()-start_time))

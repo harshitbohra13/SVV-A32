@@ -42,7 +42,7 @@ def shearstress(location,Sy,Sz,T):
     qz5 = sf.get_qz(5, Sz, prop.I_yy, fh5, 1000, 0, -h) #horizontal shear flow for section 5
 
     qy6 = sf.get_qy(6, Sy, prop.I_zz, fv6, 1000, np.pi/-2, 0) #vertical shear flow for section 6
-    qz6 = sf.get_qz(6, Sz, prop.I_yy, fh6, 1000, np.pi/-2 ,0, (qy4+qz4+qz5+qy5)) #horizontal shear flow for section 6
+    qz6 = sf.get_qz(6, Sz, prop.I_yy, fh6, 1000, np.pi/-2 ,0, (qy4+qz4-qz5-qy5)) #horizontal shear flow for section 6
 
 
     theta = np.linspace(0,np.pi/2, num = 1000)
@@ -64,7 +64,7 @@ def shearstress(location,Sy,Sz,T):
         q3_ar.append(sf.get_qy(3, Sy, prop.I_zz, fv3, 100, 0, s_points[i]) + sf.get_qz(3, Sz, prop.I_yy, fh3, 100, 0, s_points[i], (qy1+qz1+qy2+qz2)))
         q4_ar.append(sf.get_qy(4, Sy, prop.I_zz, fv4, 100, 0, s_points[i]) + sf.get_qz(4, Sz, prop.I_yy, fh4, 100, 0, s_points[i], (qy3 + qz3)))
         q5_ar.append(sf.get_qy(5, Sy, prop.I_zz, fv5, 100, 0, y_points2[i]) + sf.get_qz(5, Sz, prop.I_yy, fh5, 100, 0, y_points2[i]))
-        q6_ar.append((sf.get_qy(6, Sy, prop.I_zz, fv6, 100, np.pi/-2, theta2[i]))+sf.get_qz(6, Sz, prop.I_yy, fh6, 100, np.pi/-2 ,theta2[i], (qy4+qz4+qz5+qy5)))
+        q6_ar.append((sf.get_qy(6, Sy, prop.I_zz, fv6, 100, np.pi/-2, theta2[i]))+sf.get_qz(6, Sz, prop.I_yy, fh6, 100, np.pi/-2 ,theta2[i], (qy4+qz4-qz5-qy5)))
 
     qt1, qt2 = sf.get_q0(T)
 

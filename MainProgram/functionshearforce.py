@@ -110,7 +110,7 @@ def get_qboom(section, dir, s):
 
 def get_qy(section, Sy, Izz, f, N, a, b, qs0 = 0):
     q = (get_integral(f,N,a,b) + get_qboom(section, "y", b))
-    return((-Sy/Izz  *  q) + qs0)
+    return((-Sy/Izz *  q) + qs0)
 
 def get_qz(section, Sz, Iyy, f, N, a, b, qs0 = 0):
     q = (get_integral(f,N,a,b) + get_qboom(section, "z", b))

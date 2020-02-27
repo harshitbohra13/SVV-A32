@@ -1,14 +1,14 @@
-from MainProgram.Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline, \
+from Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline, \
     quadrupleintegrate_spline,positive
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from MainProgram.shearforces import shearstress
-from MainProgram import SVV_structural_properties as prop
+from shearforces import shearstress
+import SVV_structural_properties as prop
 from scipy.integrate import quad
-from MainProgram.shearcentercalc import get_sc
-import MainProgram.Data as data
+from shearcentercalc import get_sc
+import Data as data
 
 ################DATA FOKKERF100##################
 Ca = data.Ca #m

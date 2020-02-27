@@ -79,7 +79,7 @@ def shearstress(location,Sy,Sz,T):
     q1_ar = q1_ar+qt1
     q6_ar = q6_ar+qt1
     q2_ar = q2_ar+(qt2 - qt1)
-    q5_ar = q5_ar+(qt1 - qt2)
+    q5_ar = q5_ar+(qt2 - qt1)
     q3_ar = q3_ar+qt2
     q4_ar = q4_ar+qt2
     return q1_ar,q2_ar,q3_ar,q4_ar,q5_ar,q6_ar

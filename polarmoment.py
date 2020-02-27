@@ -22,11 +22,11 @@ A = np.array([[(h_a/(2*A1*t_sp))+(pi*r)/(2*A1*t_sk),-h_a/(2*A1*t_sp),-1],
               [-h_a/(2*A2*t_sp),(h_a/(2*A2*t_sp))+((2*len_sk)/(2*A2*t_sk)),-1],
               [2*A1,2*A2,0]])
 
-B = np.array([0,0,1])
+B = np.array([0,0,T])
 
 x = np.linalg.solve(A,B)
 print(x)
 
 Gdsigmadz = x[2]
-J = T/(dsigmadz)
+J = T/(Gdsigmadz)
 print(J)

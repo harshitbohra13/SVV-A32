@@ -96,10 +96,11 @@ la= 1.611
 
 def integrate_spline(nodes,interpolant,position):
     '''
-    :param nodes:
-    :param interpolant:
-    :param position:
-    :return:
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :param POSITION: the exact x-axis or z-axis location that you would like to get the value
+    :return:AREA of the finite integral
     '''
     # Number of nodes
     N = len(nodes)
@@ -134,36 +135,75 @@ def integrate_spline(nodes,interpolant,position):
     return area_sum
 
 def doubleintegrate_spline(nodes,interpolant,location):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :param POSITION: the exact x-axis or z-axis location that you would like to get the value
+    :return:AREA of the finite integral
+    '''
     first_integral = np.array([integrate_spline(nodes,interpolant,location_span) for location_span in nodes])
     coeff_second = find_interpolant(nodes,first_integral)
     second_integral = integrate_spline(nodes,coeff_second,location)
     return second_integral
 
 def doubleintegrate_spline_loop(nodes,interpolant):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :return:AREA of the finite integral
+    '''
     first_integral = np.array([integrate_spline(nodes,interpolant,location_span) for location_span in nodes])
     coeff_second_spline = find_interpolant(nodes,first_integral)
     second_integral_total = np.array([integrate_spline(nodes,coeff_second_spline,location_chord) for location_chord in nodes])
     return second_integral_total
 
 def tripleintegrate_spline(nodes,interpolant,location):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :param POSITION: the exact x-axis or z-axis location that you would like to get the value
+    :return:AREA of the finite integral
+    '''
     double_integral = doubleintegrate_spline_loop(nodes,interpolant)
     coeff_triple = find_interpolant(nodes,double_integral)
     triple_integral = integrate_spline(nodes,coeff_triple,location)
     return triple_integral
 
 def tripleintegrate_spline_loop(nodes,interpolant):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :return:AREA of the finite integral
+    '''
     double_integral = doubleintegrate_spline_loop(nodes,interpolant)
     coeff_triple_spline = find_interpolant(nodes,double_integral)
     triple_integral = np.array([integrate_spline(nodes,coeff_triple_spline,location_span) for location_span in nodes])
     return triple_integral
 
 def quadrupleintegrate_spline(nodes,interpolant,location):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :param POSITION: the exact x-axis or z-axis location that you would like to get the value
+    :return:AREA of the finite integral
+    '''
     triple_integral = tripleintegrate_spline_loop(nodes,interpolant)
     coeff_quadruple = find_interpolant(nodes,triple_integral)
     quadruple_integral = integrate_spline(nodes,coeff_quadruple,location)
     return quadruple_integral
 
 def quadrupleintegrate_spline_loop(nodes,interpolant):
+    '''
+    The length of NODES and the ROWS of the INTERPOLANTS have to be equal
+    :param NODES: array of nodes, e.g. the nodes along the z-axis or x-axis
+    :param INTERPOLANTS: MATRIX (N x 4) with the INTERPOLANTS, it return the 1st column the a_i, the 2nd column the b_i, the 3rd column the c_i, the 4th column the d_i
+    :return:AREA of the finite integral
+    '''
     triple_integral = tripleintegrate_spline_loop(nodes,interpolant)
     coeff_quadruple_spline = find_interpolant(nodes,triple_integral)
     quadruple_integral = np.array([integrate_spline(nodes,coeff_quadruple_spline,location_span) for location_span in nodes])

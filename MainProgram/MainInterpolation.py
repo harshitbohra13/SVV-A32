@@ -1,47 +1,50 @@
-from Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline,tripleintegrate_spline,quadrupleintegrate_spline,positive
+from MainProgram.Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline, \
+    quadrupleintegrate_spline,positive
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from shearcentercalc import get_sc, h, lsk
-import functionshearforce as sf
-import SVV_structural_properties as prop
+from MainProgram.shearforces import shearstress
+from MainProgram import SVV_structural_properties as prop
 from scipy.integrate import quad
+from MainProgram.shearcentercalc import get_sc
+import MainProgram.Data as data
 
 ################DATA FOKKERF100##################
-Ca = 0.505 #m
-la = 1.611 #m
-x1 = 0.125 #m
-x2 = 0.498 #m
-x3 = 1.494 #m
-xa = 0.245 #m
-ha = 0.161 #m
-d1 = 0.00389 # m
-d3 = 0.01245  # m
-P = -49.2*1000  # N
-theta = 30*np.pi/180 #rad
-t_sk = 1.1e-3   # skin thickness [m]
-t_sp = 2.4e-3   # spar thickness [m]
-n_st = 11       # number of stiffeners [-]
-t_st = 1.2e-3   # thickness of stiffener [m]
-h_st = 1.3e-2   # height of stiffener [m]
-w_st = 1.7e-2   # width of stiffener [m]
-z_hat = -0.08439525605624261 #m
-z_cent = -0.20339801033636265
-Izz = 4.715268350076085e-06
-Iyy = 4.555812396709226e-05
-J = 7.748548555816593e-06
-E = 72.9*10**9
-G = 27.1*10**9
+Ca = data.Ca #m
+la = data.la #m
+x1 = data.x1 #m
+x2 = data.x2 #m
+x3 = data.x3 #m
+xa = data.xa #m
+ha = data.ha #m
+d1 = data.d1 # m
+d3 = data.d3  # m
+P = data.P  # N
+theta = data.theta #rad
+t_sk = data.t_sk   # skin thickness [m]
+t_sp = data.t_sp  # spar thickness [m]
+n_st = data.n_st     # number of stiffeners [-]
+t_st = data.t_st   # thickness of stiffener [m]
+h_st = data.h_st   # height of stiffener [m]
+w_st = data.w_st  # width of stiffener [m]
+t_sk = data.t_sk
+E = data.E
+G = data.G
+
+z_hat = get_sc()[0] #m
+z_cent = prop.z_cent
+Izz = prop.I_zz
+Iyy = prop.I_yy
+J = prop.J
 xI = x2 - xa / 2
 xII = x2 + xa / 2
-t_sk = 0.0011
 ################################################
 
 start_time = time.time()
 
 #Opening and reading the file text of the Fokker 100
-file_f100 = open("aerodynamicloadf100.dat","r")
+file_f100 = open("aerodynamicloadf100.dat", "r")
 lines = file_f100.readlines()
 
 #Variables
@@ -152,14 +155,11 @@ for i in range(0,Nz-1):
 Area_chord= []
 for chord in range(0,Nx):
     coeff_matrix = find_interpolant(coor_z,matrix_data[:,chord])
-    Area_singlechord = 1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
+    Area_singlechord = -1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
     Area_chord.append(Area_singlechord)
 Area_chord = np.array(Area_chord)
 
-print(integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1]))
-
-plt.figure(4)
-plt.plot(coor_x,Area_chord)
+print(doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1]))
 
 center_pressure = []
 for chord in range(0,Nx):
@@ -229,42 +229,185 @@ B_matrix = np.array([[P*np.sin(theta) + integrate_spline(coor_x,find_interpolant
 			   [-d1*np.sin(theta)],
 			   [0],
 			   [-d3*np.sin(theta) - (1/(6*E*Iyy))*P*np.cos(theta)*(x3-(xII))**3],
-			   [-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),xI)*np.sin(theta)+1/(G*J)*np.abs(z_hat)*np.sin(theta)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),xI)]]) #-(1/(G*J))*q Add Aero
+			   [-1/(E*Izz)*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),xI)*np.sin(theta)-1/(G*J)*np.abs(z_hat)*np.sin(theta)*doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),xI)]]) #-(1/(G*J))*q Add Aero
 
 x_matrix = np.dot(np.linalg.inv(A_matrix), B_matrix)
 
 def Sy(x):
-    return x_matrix[0] * positive(x - x1, 0) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 0) + x_matrix[3] * positive(x - x2,0) - P * np.sin(theta) * positive(x - (xII), 0) + x_matrix[5] * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
+    return float(x_matrix[0] * positive(x - x1, 0) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 0) + x_matrix[3] * positive(x - x2,0) - P * np.sin(theta) * positive(x - (xII), 0) + x_matrix[5] * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x))
 
 def Sz(x):
-    return x_matrix[1] * positive(x - x1, 0) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 0) + x_matrix[4] * positive(x - x2,0) - P * np.cos(theta) * positive(x - (xII), 0) + x_matrix[6] * positive(x - x3, 0)
+    return float(x_matrix[1] * positive(x - x1, 0) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 0) + x_matrix[4] * positive(x - x2,0) - P * np.cos(theta) * positive(x - (xII), 0) + x_matrix[6] * positive(x - x3, 0))
 
 def Moment_y(x):
-    return x_matrix[1] * positive(x - x1, 1) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 1) + x_matrix[4] * positive(x - x2,1) - P * np.cos(theta) * positive(x - (xII), 1) + x_matrix[6] * positive(x - x3, 1)
+    return float(x_matrix[1] * positive(x - x1, 1) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 1) + x_matrix[4] * positive(x - x2,1) - P * np.cos(theta) * positive(x - (xII), 1) + x_matrix[6] * positive(x - x3, 1))
 
 def Moment_z(x):
-    return x_matrix[0] * positive(x - x1, 1) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 1) + x_matrix[3] * positive(x - x2,1) - P * np.sin(theta) * positive(x - (xII), 1) + x_matrix[5] * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)
+    return float(x_matrix[0] * positive(x - x1, 1) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 1) + x_matrix[3] * positive(x - x2,1) - P * np.sin(theta) * positive(x - (xII), 1) + x_matrix[5] * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x))
 
 def T(x):
-    return -x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 0) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 0) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 0) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 0) - x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)
+    return float(-x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 0) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 0) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 0) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 0) - x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 0) - integrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x))
 
 def v(x):
-    return -(1 / (6 * E * Izz)) * (x_matrix[0] * positive(x - x1, 3) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 3) + x_matrix[3] * positive(x - x2,3) - P * np.sin(theta) * positive(x - (xII), 3) + x_matrix[5] * positive(x - x3, 3) - 6*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)) + x_matrix[9] * x + x_matrix[10]
+    return float(-(1 / (6 * E * Izz)) * (x_matrix[0] * positive(x - x1, 3) - x_matrix[2] * np.sin(theta) * positive(x - (xI), 3) + x_matrix[3] * positive(x - x2,3) - P * np.sin(theta) * positive(x - (xII), 3) + x_matrix[5] * positive(x - x3, 3) - 6*quadrupleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),x)) + x_matrix[9] * x + x_matrix[10])
 
 def w(x):
-    return -(1 / (6 * E * Iyy)) * (x_matrix[1] * positive(x - x1, 3) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 3) + x_matrix[4] * positive(x - x2,3) - P * np.cos(theta) * positive(x - (xII), 3) + x_matrix[6] * positive(x - x3, 3)) + x_matrix[7] * x + x_matrix[8]
+    return float(-(1 / (6 * E * Iyy)) * (x_matrix[1] * positive(x - x1, 3) - x_matrix[2] * np.cos(theta) * positive(x - (xI), 3) + x_matrix[4] * positive(x - x2,3) - P * np.cos(theta) * positive(x - (xII), 3) + x_matrix[6] * positive(x - x3, 3)) + x_matrix[7] * x + x_matrix[8])
 
 def Twist(x):
-    return (1 / (G * J)) * (-x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 1) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 1) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 1) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 1) -x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)) - x_matrix[11]
+    return float((1 / (G * J)) * (-x_matrix[0] * (np.abs(z_hat) - ha / 2) * positive(x - x1, 1) + x_matrix[2] * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xI), 1) - x_matrix[3] * (np.abs(z_hat) - ha / 2) * positive(x - x2, 1) + P * (np.sin(theta) * np.abs(z_hat) - np.cos(theta) * ha / 2) * positive(x - (xII), 1) -x_matrix[5] * (np.abs(z_hat) - ha / 2) * positive(x - x3, 1) - doubleintegrate_spline(coor_x,find_interpolant(coor_x,torque_chord),x)) - x_matrix[11])
+
+plt.figure(3)
+fig, axs = plt.subplots(2,2)
+x_axis = np.linspace(coor_x[0], coor_x[-1], 100)
+v_axis = np.array([])
+mz_axis = np.array([])
+sy_axis = np.array([])
+for i in range(len(x_axis)):
+    v_axis = np.append(v_axis, v(x_axis[i]))
+    mz_axis = np.append(mz_axis,Moment_z(x_axis[i]))
+    sy_axis = np.append(sy_axis,Sy(x_axis[i]))
+slopev_axis =(np.diff(v_axis)/np.diff(x_axis))
+axs[0,0].plot(x_axis,v_axis)
+axs[0,0].set(title='Deflection in y', xlabel='x', ylabel='v(x)')
+axs[0,0].grid()
+axs[0,1].plot(x_axis[1:],slopev_axis)
+axs[0,1].set(title='Slope in y', xlabel='x', ylabel='dv/dx(x)')
+axs[0,1].grid()
+axs[1,0].plot(x_axis,mz_axis)
+axs[1,0].set(title='Bending Moment about z', xlabel='x', ylabel='M_z(x)')
+axs[1,0].grid()
+axs[1,1].plot(x_axis,sy_axis)
+axs[1,1].set(title='Shear Force in y', xlabel='x', ylabel='S_y(x)')
+axs[1,1].grid()
+
+plt.figure(4)
+fig, axs = plt.subplots(2,2)
+x_axis = np.linspace(coor_x[0], coor_x[-1], 100)
+w_axis = np.array([])
+my_axis = np.array([])
+sz_axis = np.array([])
+for i in range(len(x_axis)):
+    w_axis = np.append(w_axis, w(x_axis[i]))
+    my_axis = np.append(my_axis,Moment_y(x_axis[i]))
+    sz_axis = np.append(sz_axis,Sz(x_axis[i]))
+slopew_axis =(np.diff(w_axis)/np.diff(x_axis))
+axs[0,0].plot(x_axis,w_axis)
+axs[0,0].set(title='Deflection in z', xlabel='x', ylabel='w(x)')
+axs[0,0].grid()
+axs[0,1].plot(x_axis[1:],slopew_axis)
+axs[0,1].set(title='Slope in z', xlabel='x', ylabel='dw/dx(x)')
+axs[0,1].grid()
+axs[1,0].plot(x_axis,my_axis)
+axs[1,0].set(title='Bending Moment about y', xlabel='x', ylabel='M_y(x)')
+axs[1,0].grid()
+axs[1,1].plot(x_axis,sz_axis)
+axs[1,1].set(title='Shear Force in z', xlabel='x', ylabel='S_z(x)')
+axs[1,1].grid()
 
 plt.figure(5)
+fig, axs = plt.subplots(1,2)
 x_axis = np.linspace(coor_x[0], coor_x[-1], 100)
-y_axis = np.array([])
+torque_axis = np.array([])
+twist_axis = np.array([])
 for i in range(len(x_axis)):
-    value = v(x_axis[i])
-    y_axis = np.append(y_axis, value)
-plt.plot(x_axis, y_axis)
+    torque_axis = np.append(torque_axis, T(x_axis[i]))
+    twist_axis = np.append(twist_axis,Twist(x_axis[i]))
+axs[0].plot(x_axis,torque_axis)
+axs[0].set(title='Torque', xlabel='x', ylabel='T(x)')
+axs[0].grid()
+axs[1].plot(x_axis,twist_axis)
+axs[1].set(title='Twist', xlabel='x', ylabel='$theta$(x)')
+axs[1].grid()
+
+
+####################AIRFOIL - STRESSES##########################
+location = 0.5 #[m] #Location of the cross section
+h = ha/2 #cm
+
+q1,q2,q3,q4,q5,q6 = shearstress(location,Sy(location),Sz(location),T(location))
+
+#Step for each point
+step=1000
+
+#Third Section
+z3=np.linspace(h,Ca,step)
+y3=Ca*h/(Ca-h)-z3*h/(Ca-h)
+
+#Fourth Section
+z4=z3
+y4=-y3
+
+#Second Section
+y2=np.linspace(0,h,step)
+z2=np.ones(len(y2))*h
+
+#Fifth Section
+y5=-y2
+z5=z2
+
+#First Section
+z1=np.linspace(0,h,step)
+y1=np.sqrt(-(z1-h)**2+h**2)
+
+#Sixth Section
+z6=z1
+y6=-y1
+
+#############SHEAR-FLOWS######################
+plt.figure(7)
+#Plot all the sections
+marker_size = 15
+plt.scatter(-z3,y3,marker_size,q3)
+plt.scatter(-z4,y4,marker_size,q4[::-1])
+plt.scatter(-z2,y2,marker_size,q2)
+plt.scatter(-z5,y5,marker_size,q5)
+plt.scatter(-z1,y1,marker_size,q1)
+plt.scatter(-z6,y6,marker_size,q6[::-1])
+cbar = plt.colorbar()
+plt.title('Shear Flow Distribution')
+plt.ylabel('y[m]')
+plt.xlabel('-z[m]')
+cbar.set_label('q[N/m]')
 plt.grid()
-#plt.show()
+
+##############DIRECT-STRESSES###############
+def direct_stress(My,Mz,z,y):
+    sigma_xx_z = My * (z - z_hat) / Iyy
+    sigma_xx_y = Mz * y / Izz
+    sigma_xx_total = sigma_xx_y + sigma_xx_z
+    return sigma_xx_total
+
+sigma_1 = []
+sigma_2 = []
+sigma_3 = []
+sigma_4 = []
+sigma_5 = []
+sigma_6 = []
+
+for n in range(0,step):
+    sigma_3.append(direct_stress(Moment_y(location),Moment_z(location),-z3[n],y3[n]))
+    sigma_4.append(direct_stress(Moment_y(location), Moment_z(location), -z4[n], y4[n]))
+    sigma_2.append(direct_stress(Moment_y(location), Moment_z(location), -z2[n], y2[n]))
+    sigma_5.append(direct_stress(Moment_y(location), Moment_z(location), -z5[n], y5[n]))
+    sigma_1.append(direct_stress(Moment_y(location), Moment_z(location), -z1[n], y1[n]))
+    sigma_6.append(direct_stress(Moment_y(location), Moment_z(location), -z6[n], y6[n]))
+
+plt.figure(8)
+#Plot all the sections
+marker_size = 15
+plt.scatter(-z3,y3,marker_size,sigma_3)
+plt.scatter(-z4,y4,marker_size,sigma_4)
+plt.scatter(-z2,y2,marker_size,sigma_2)
+plt.scatter(-z5,y5,marker_size,sigma_5)
+plt.scatter(-z1,y1,marker_size,sigma_1)
+plt.scatter(-z6,y6,marker_size,sigma_6)
+cbar = plt.colorbar()
+plt.title('Direct Stress Distribution')
+plt.ylabel('y[m]')
+plt.xlabel('-z[m]')
+cbar.set_label('$sigma_{xx}$[N/m^2]')
+plt.grid()
 
 print("Runtime: %f seconds" % (time.time()-start_time))
+plt.show()

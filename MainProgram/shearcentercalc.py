@@ -12,6 +12,7 @@ Stiffeners are reffered as booms since they are treated as point masses with are
 """
 import numpy as np
 from MainProgram import SVV_structural_properties as prop
+import Data as data
 
 #to compute shear center 
 h = prop.ha/2
@@ -22,7 +23,7 @@ area1 =  np.pi/2*(h)**2
 area2 =  1/2*prop.ha*(prop.Ca - h)
 boareas = np.zeros(11)
 boareas.fill(prop.A_stiff) 
-G = Data.G #pascals
+G = data.G #pascals
 
 # def get_redq():
     # q1 = Symbol('q1')

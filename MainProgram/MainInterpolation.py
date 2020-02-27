@@ -1,35 +1,38 @@
 from MainProgram.Functions_Interpolation import find_interpolant, compute_value_interpolation,integrate_spline,doubleintegrate_spline, \
     quadrupleintegrate_spline,positive
+from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 from MainProgram.shearforces import shearstress
 from MainProgram import SVV_structural_properties as prop
 from scipy.integrate import quad
+from MainProgram.shearcentercalc import get_sc
+import MainProgram.Data as data
 
 ################DATA FOKKERF100##################
-Ca = Data.Ca #m
-la = Data.la #m
-x1 = Data.x1 #m
-x2 = Data.x2 #m
-x3 = Data.x3 #m
-xa = Data.xa #m
-ha = Data.ha #m
-d1 = Data.d1 # m
-d3 = Data.d3  # m
-P = Data.P  # N
-theta = Data.theta #rad
-t_sk = Data.t_sk   # skin thickness [m]
-t_sp = Data.t_sp  # spar thickness [m]
-n_st = Data.n_st     # number of stiffeners [-]
-t_st = Data.t_st   # thickness of stiffener [m]
-h_st = Data.h_st   # height of stiffener [m]
-w_st = Data.w_st  # width of stiffener [m]
-t_sk = Data.t_sk
-E = Data.E
-G = Data.G
+Ca = data.Ca #m
+la = data.la #m
+x1 = data.x1 #m
+x2 = data.x2 #m
+x3 = data.x3 #m
+xa = data.xa #m
+ha = data.ha #m
+d1 = data.d1 # m
+d3 = data.d3  # m
+P = data.P  # N
+theta = data.theta #rad
+t_sk = data.t_sk   # skin thickness [m]
+t_sp = data.t_sp  # spar thickness [m]
+n_st = data.n_st     # number of stiffeners [-]
+t_st = data.t_st   # thickness of stiffener [m]
+h_st = data.h_st   # height of stiffener [m]
+w_st = data.w_st  # width of stiffener [m]
+t_sk = data.t_sk
+E = data.E
+G = data.G
 
-z_hat = -0.08439525605624261 #m
+z_hat = get_sc()[0] #m
 z_cent = prop.z_cent
 Izz = prop.I_zz
 Iyy = prop.I_yy
@@ -314,12 +317,12 @@ axs[0].plot(x_axis,torque_axis)
 axs[0].set(title='Torque', xlabel='x', ylabel='T(x)')
 axs[0].grid()
 axs[1].plot(x_axis,twist_axis)
-axs[1].set(title='Twist', xlabel='x', ylabel='theta(x)')
+axs[1].set(title='Twist', xlabel='x', ylabel='$theta$(x)')
 axs[1].grid()
 
 
-####################Stresses##########################
-location = 0.5
+####################AIRFOIL - STRESSES##########################
+location = 0.5 #[m] #Location of the cross section
 h = ha/2 #cm
 
 q1,q2,q3,q4,q5,q6 = shearstress(location,Sy(location),Sz(location),T(location))
@@ -351,17 +354,59 @@ y1=np.sqrt(-(z1-h)**2+h**2)
 z6=z1
 y6=-y1
 
-print(T(0.5))
+#############SHEAR-FLOWS######################
 plt.figure(7)
 #Plot all the sections
 marker_size = 15
-plt.scatter(z3,y3,marker_size,q3)
-plt.scatter(z4,y4,marker_size,q4[::-1])
-plt.scatter(z2,y2,marker_size,q2[::-1])
-plt.scatter(z5,y5,marker_size,q5)
-plt.scatter(z1,y1,marker_size,q1)
-plt.scatter(z6,y6,marker_size,q6[::-1])
-plt.colorbar()
+plt.scatter(-z3,y3,marker_size,q3)
+plt.scatter(-z4,y4,marker_size,q4[::-1])
+plt.scatter(-z2,y2,marker_size,q2)
+plt.scatter(-z5,y5,marker_size,q5)
+plt.scatter(-z1,y1,marker_size,q1)
+plt.scatter(-z6,y6,marker_size,q6[::-1])
+cbar = plt.colorbar()
+plt.title('Shear Flow Distribution')
+plt.ylabel('y[m]')
+plt.xlabel('-z[m]')
+cbar.set_label('q[N/m]')
+plt.grid()
+
+##############DIRECT-STRESSES###############
+def direct_stress(My,Mz,z,y):
+    sigma_xx_z = My * (z - z_hat) / Iyy
+    sigma_xx_y = Mz * y / Izz
+    sigma_xx_total = sigma_xx_y + sigma_xx_z
+    return sigma_xx_total
+
+sigma_1 = []
+sigma_2 = []
+sigma_3 = []
+sigma_4 = []
+sigma_5 = []
+sigma_6 = []
+
+for n in range(0,step):
+    sigma_3.append(direct_stress(Moment_y(location),Moment_z(location),-z3[n],y3[n]))
+    sigma_4.append(direct_stress(Moment_y(location), Moment_z(location), -z4[n], y4[n]))
+    sigma_2.append(direct_stress(Moment_y(location), Moment_z(location), -z2[n], y2[n]))
+    sigma_5.append(direct_stress(Moment_y(location), Moment_z(location), -z5[n], y5[n]))
+    sigma_1.append(direct_stress(Moment_y(location), Moment_z(location), -z1[n], y1[n]))
+    sigma_6.append(direct_stress(Moment_y(location), Moment_z(location), -z6[n], y6[n]))
+
+plt.figure(8)
+#Plot all the sections
+marker_size = 15
+plt.scatter(-z3,y3,marker_size,sigma_3)
+plt.scatter(-z4,y4,marker_size,sigma_4)
+plt.scatter(-z2,y2,marker_size,sigma_2)
+plt.scatter(-z5,y5,marker_size,sigma_5)
+plt.scatter(-z1,y1,marker_size,sigma_1)
+plt.scatter(-z6,y6,marker_size,sigma_6)
+cbar = plt.colorbar()
+plt.title('Direct Stress Distribution')
+plt.ylabel('y[m]')
+plt.xlabel('-z[m]')
+cbar.set_label('$sigma_{xx}$[N/m^2]')
 plt.grid()
 
 print("Runtime: %f seconds" % (time.time()-start_time))

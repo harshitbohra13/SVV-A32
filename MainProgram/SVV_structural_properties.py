@@ -1,20 +1,21 @@
 import numpy as np
 from math import *
 from matplotlib import pyplot as plt
+import Data as data
 
 #================= Data Fokker 100 =======================
 
-Ca = Data.Ca     # chord length aileron [m]
-la = Data.la     # span of the aileron [m]
-ha = Data.ha  # aileron height [m]
+Ca = data.Ca     # chord length aileron [m]
+la = data.la     # span of the aileron [m]
+ha = data.ha  # aileron height [m]
 
-t_sk = Data.t_sk # skin thickness [m]
-t_sp = Data.t_sp   # spar thickness [m]
+t_sk = data.t_sk # skin thickness [m]
+t_sp = data.t_sp   # spar thickness [m]
 
-n_st = Data.n_st # number of stiffeners [-]
-t_st = Data.t_st  # thickness of stiffener [m]
-h_st = Data.h_st  # height of stiffener [m]
-w_st = Data.w_st   # width of stiffener [m]
+n_st = data.n_st # number of stiffeners [-]
+t_st = data.t_st  # thickness of stiffener [m]
+h_st = data.h_st  # height of stiffener [m]
+w_st = data.w_st   # width of stiffener [m]
 x = 1000
 
 #============= Calculate stiffener locations ===========================

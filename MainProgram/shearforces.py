@@ -1,8 +1,10 @@
 import numpy as np
-from MainProgram import SVV_structural_properties as prop, functionshearforce as sf
-from MainProgram.shearcentercalc import h, lsk
+import SVV_structural_properties as prop, functionshearforce as sf
+from shearcentercalc import h, lsk, get_sc
 
 def shearstress(location,Sy,Sz,T):
+    z_sc, y_sc = get_sc() 
+    # T += Sy * z_sc
     z_c = prop.z_cent - h #z-location from the spar
     # ------------------------------------------------------------------------------------------
     '''

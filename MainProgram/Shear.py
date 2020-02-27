@@ -17,7 +17,7 @@ This file consists shear flow calculations.
 Stiffeners are reffered as booms since they are treated as point masses with areas
 """
 import numpy as np
-from MainProgram import SVV_structural_properties as prop
+import SVV_structural_properties as prop
 
 # to compute shear center
 lsk = np.sqrt((prop.Ca - 0.5 * prop.ha) ** 2 + (0.5 * prop.ha) ** 2)

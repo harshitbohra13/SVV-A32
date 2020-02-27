@@ -7,19 +7,19 @@ from shearcentercalc import h, get_sc
 z_sc, y_sc = get_sc()
 
 class forces:
-    Sy = np.zeros(41)
-    Sz = np.zeros(41)
-    Ta = np.zeros(41)
+    Sy = 0
+    Sz = 0
+    Ta = 0 
+    def __init__(self,x):
+        self.Sy =  Mat.Sy(x)
+        self.Sz =  Mat.Sz(x)
+        self.Ta =  self.Sy*(h + z_sc)
+        self.Ta += Mat.T(x)
+        
 
-    def get_allvals(self): 
-         j = 0 
-         vals = np.linspace(0, Mat.la, num = 41)
-         for i in vals:
-            self.Sy[j] =  Mat.Sy(i)
-            self.Sz[j] =  Mat.Sz(i)
-            self.Ta[j] =  self.Sy[j]*(h + z_sc)
-            self.Ta[j] += Mat.T(i)
-            j+=1
+    def get_allvals(self,x):  
+        # vals = np.linspace(0, Mat.la, num = 41)
+        return(self.Sy, self.Sz, self.Ta)
       
 def sintegrate(N, a, b):
     f = lambda x: np.sin(x)

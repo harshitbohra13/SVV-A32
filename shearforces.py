@@ -5,14 +5,15 @@ from shearcentercalc import get_sc, h, lsk
 
 # ------------------------------------------------------------------------------------------
 
-forces = sf.forces()
-forces.get_allvals()
-
 x = 0.5
 
-Sy = forces.Sy[4]
-Sz = forces.Sz[5]
-T  = forces.Ta[5]
+forces = sf.forces(x)
+
+Sy  = forces.Sy[0]
+Sz  = forces.Sz[0]
+T   = forces.Ta[0]
+
+print(T)
 
 z_c = prop.z_cent - h #z-location from the spar
 # ------------------------------------------------------------------------------------------

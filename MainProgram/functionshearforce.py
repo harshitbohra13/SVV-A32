@@ -1,6 +1,6 @@
 import numpy as np
-from MainProgram import MainNewMatrixCalculation as Mat, SVV_structural_properties as prop
-from MainProgram.shearcentercalc import h, get_sc
+import MainNewMatrixCalculation as Mat, SVV_structural_properties as prop
+from shearcentercalc import h, get_sc
 
 
 z_sc, y_sc = get_sc()

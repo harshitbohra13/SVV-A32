@@ -11,7 +11,7 @@ Stiffeners are reffered as booms since they are treated as point masses with are
 
 """
 import numpy as np
-from MainProgram import SVV_structural_properties as prop
+import SVV_structural_properties as prop
 import Data as data
 
 #to compute shear center 

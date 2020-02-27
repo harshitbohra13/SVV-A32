@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from MainProgram import shearforces as shear
+import shearforces as shear
 
 #Variables
 Ca = 0.515 #m
@@ -12,7 +12,7 @@ step=0.00001
 #Third Section
 z3=np.arange(h,Ca+step,step)
 y3=Ca*h/(Ca-h)-z3*h/(Ca-h)
-q3 = shear.shearstress(loca)
+q3 = shear.shearstress(1,1,1,1)
 
 #Fourth Section
 z4=z3

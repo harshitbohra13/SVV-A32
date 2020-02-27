@@ -104,7 +104,7 @@ def get_qsec6():
     
     qarc6 = 0 
     qarc6 = prop.t_sk* h * h * sintegrate(1000,  -np.pi/2 ,0) 
-    qarc6 =( (-1) *Sy/prop.I_zz *(qarc6 + prop.B_y[10] * prop.A_stiff)) + (get_qsec4() - get_qsec5())
+    qarc6 =( (-1) *Sy/prop.I_zz *(qarc6 + prop.B_y[prop.n_st - 1] * prop.A_stiff)) + (get_qsec4() - get_qsec5())
     
     return (qarc6)
 
@@ -112,7 +112,7 @@ def get_qsec6():
 def get_qsec3():
     
     qsec3 = prop.t_sk* (h - h/lsk)* get_integral(1000, 0, lsk)
-    for i in range(2, (prop.n_st+1)/2, 1):
+    for i in range(2, int(((prop.n_st)+1)/2), 1):
         qsec3 += prop.B_y[i]*prop.A_stiff
 
     qsec3 = (-1)*Sy/prop.I_zz* qsec3 + get_qsec1() +  get_qsec2()    
@@ -122,7 +122,7 @@ def get_qsec3():
 def get_qsec4():
     qsec4 = 0 
     qsec4 = prop.t_sk *(h/lsk)* get_integral(1000, 0, lsk)
-    for i in range((prop.n_st+1)/2, prop.n_st - 1, 1):
+    for i in range(int((prop.n_st+1)/2), prop.n_st - 1, 1):
         qsec4 += prop.B_y[i]*prop.A_stiff
 
     qsec4 = (-1)*Sy/prop.I_zz * qsec4 + get_qsec3()    

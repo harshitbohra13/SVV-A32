@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import time
 from shearforces import shearstress
 import SVV_structural_properties as prop
-from scipy.integrate import quad
 from shearcentercalc import get_sc
 import Data as data
 

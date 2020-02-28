@@ -85,8 +85,8 @@ y6=-y1
 output = np.array([0,0,0,0,0])
 
 
-#for x in xrange[1:-1]:
-for x in [0.4,0.8,1.2,1.6,2.0]:
+for x in xrange[1:-1]:
+#for x in [0.4,0.8,1.2,1.6,2.0]:
 
     #############SHEAR-FLOWS############################################
     q1,q2,q3,q4,q5,q6 = shearstress(x,Sy(x),Sz(x),T(x))
@@ -138,15 +138,13 @@ output = np.delete(output,(0),axis=0)
 dfmodel = pd.DataFrame({
 'x' : output[:,0]*1000,
 'y' : output[:,1]*1000,
-'z' : output[:,2]*1000,
+'z' : output[:,2]*-1000,
 'Sdirect': output[:,3],
 'Smises' : output[:,4]/1e9
 })
 
     
 print("Runtime: %f seconds" % (time.time()-start_time))
-
-
 
 
 Smises_max_loc_model = dfmodel.loc[dfmodel['Smises']==dfmodel.max()['Smises']][['x','y','z','Smises']]
@@ -156,6 +154,8 @@ print('Max von Mises stress validation model = ','\n','\n',Smises_max_loc_valid,
 
 fig = px.scatter_3d(dfmodel, x='x', y='y', z='z', color='Smises')
 fig.update_layout(title='Von mises stresses numerical model')
+fig.show()
+
 fig = px.scatter_3d(dfjambent, x='x', y='y', z='z', color='Smises')
 fig.update_layout(title='Von mises stresses validation model')
 fig.show()

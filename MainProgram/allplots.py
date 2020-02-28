@@ -163,7 +163,7 @@ def VonMises(My, Mz,tau_yz,z, y):
     sigma_xx_y = Mz * y / Izz
 
     sigma_xx_total = sigma_xx_y + sigma_xx_z
-    sigma_vm =  np.sqrt(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
+    sigma_vm =  np.square(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
 
     return sigma_vm
 

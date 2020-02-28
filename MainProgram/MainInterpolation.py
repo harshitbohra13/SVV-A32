@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import time
 from shearforces import shearstress
 import SVV_structural_properties as prop
+from scipy.integrate import quad
 from shearcentercalc import get_sc
 import Data as data
 
@@ -46,15 +47,12 @@ start_time = time.time()
 file_f100 = open("aerodynamicloadf100.dat", "r")
 lines = file_f100.readlines()
 
-
-
-
 #Variables
 Nz = 81
 Nx = 41
-q_xz = 5.54 / 81 * 1000
 
-#Inserting the values of the text file to a matrix 81 times 41 (81 rows 41 columns)
+
+#Inserting the values of the text file to a matrix 81 times 41
 matrix_data = np.zeros((Nz,Nx))
 for line in lines:
     row = lines.index(line)
@@ -62,10 +60,11 @@ for line in lines:
     magnitude_list = line.split(",")
     matrix_data[row,:] = magnitude_list
 
-if data.loadcase == 'jambent' or data.loadcase == 'jamstraight':
-    matrix_data = np.full((Nz, Nx), q_xz)#b737 aerodynamic loading data (constant loading)
-if data.loadcase == 'bending':
-    matrix_data = np.full((Nz, Nx), 0)#b737 aerodynamic loading data (no loading)
+#if data.loadcase == 'jambent' or data.loadcase == 'jamstraight':
+#    matrix_data = np.full((Nz, Nx), q_xz)#b737 aerodynamic loading data (constant loading)
+#if data.loadcase == 'bending':
+#    matrix_data = np.full((Nz, Nx), 0)#b737 aerodynamic loading data (no loading)
+
 
 #Z-Coordinate
 theta_z = np.zeros(Nz+1)
@@ -94,85 +93,102 @@ X,Z = np.meshgrid(coor_x,coor_z)
 Y = matrix_data
 
 #Plotting the surfaces
-plt.figure(1)
-cp = plt.contour(X,Z,Y)
-plt.colorbar(cp)
-ax = plt.axes(projection='3d')
-ax.plot_surface(X,Z,Y,cmap='magma')
 
-ax.set_xlabel('X-Axis [m] ~ Spanwise')
-ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
-ax.set_zlabel('Aerodynamic Loading [kPa]')
+#plt.figure(1)
+#cp = plt.contour(X,Z,Y)
+#plt.colorbar(cp)
+#ax = plt.axes(projection='3d')
+#ax.plot_surface(X,Z,Y,cmap='magma')
+#
+#ax.set_xlabel('X-Axis [m] ~ Spanwise')
+#ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
+#ax.set_zlabel('Aerodynamic Loading [kPa]')
+#
+##Plotting the wireframe
+#plt.figure(2)
+#cp = plt.contour(X,Z,Y)
+#plt.colorbar(cp)
+#ax = plt.axes(projection='3d')
+#ax.plot_wireframe(X,Z,Y,cmap='magma')
+#
+#ax.set_xlabel('X-Axis [m] ~ Spanwise')
+#ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
+#ax.set_zlabel('Aerodynamic Loading [kPa]')
 
-#Plotting the wireframe
-plt.figure(2)
-cp = plt.contour(X,Z,Y)
-plt.colorbar(cp)
-ax = plt.axes(projection='3d')
-ax.plot_wireframe(X,Z,Y,cmap='magma')
-
-ax.set_xlabel('X-Axis [m] ~ Spanwise')
-ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
-ax.set_zlabel('Aerodynamic Loading [kPa]')
 
 #########INTERPOLATION################
 #Plot the interpolation
 #Plotting the scatter points with a resolution of maximum of 1 mm
-fig = plt.figure(3)
-ax = plt.axes(projection = '3d')
+#fig = plt.figure(3)
+#ax = plt.axes(projection = '3d')
 
-for chord in range(0,Nx):
-    coeff_matrix=find_interpolant(coor_z,matrix_data[:,chord])
-    y_line = []
-    z_line = np.linspace(coor_z[0],coor_z[-1],500)
-    for step in range(len(z_line)):
-        value = compute_value_interpolation(coor_z,coeff_matrix,z_line[step])[0]
-        y_line.append(value)
-    nodes_length=len(z_line)
-    x_line=coor_x[chord]*np.ones(nodes_length)
-    ax.scatter3D(x_line,z_line,y_line,marker='o')
+#for chord in range(0,Nx):
+#    coeff_matrix=find_interpolant(coor_z,matrix_data[:,chord])
+#    y_line = []
+#    z_line = np.linspace(coor_z[0],coor_z[-1],500)
+#    for step in range(len(z_line)):
+#        value = compute_value_interpolation(coor_z,coeff_matrix,z_line[step])[0]
+#        y_line.append(value)
+#    nodes_length=len(z_line)
+#    x_line=coor_x[chord]*np.ones(nodes_length)
+#    ax.scatter3D(x_line,z_line,y_line,marker='o')
+#
+#for span in range(0,Nz):
+#    coeff_matrix=find_interpolant(coor_x,matrix_data[span,:])
+#    y_line = []
+#    x_line = np.linspace(coor_x[0],coor_x[-1],500)
+#    for step in range(len(z_line)):
+#        value = compute_value_interpolation(coor_x,coeff_matrix,x_line[step])[0]
+#        y_line.append(value)
+#    nodes_length=len(x_line)
+#    z_line=coor_z[span]*np.ones(nodes_length)
+#    ax.scatter3D(x_line,z_line,y_line,marker='^')
 
-for span in range(0,Nz):
-    coeff_matrix=find_interpolant(coor_x,matrix_data[span,:])
-    y_line = []
-    x_line = np.linspace(coor_x[0],coor_x[-1],500)
-    for step in range(len(z_line)):
-        value = compute_value_interpolation(coor_x,coeff_matrix,x_line[step])[0]
-        y_line.append(value)
-    nodes_length=len(x_line)
-    z_line=coor_z[span]*np.ones(nodes_length)
-    ax.scatter3D(x_line,z_line,y_line,marker='^')
-
-ax.set_xlabel('X-Axis [m]')
-ax.set_ylabel('Z-Axis [m]')
-ax.set_zlabel('Aerodynamic Loading [kPa]')
+#ax.set_xlabel('X-Axis [m]')
+#ax.set_ylabel('Z-Axis [m]')
+#ax.set_zlabel('Aerodynamic Loading [kPa]')
 #plt.show()
 
+
+#############INTEGRATION#############
+Area_sample=[]
+for i in range(0,Nz-1):
+    coeff_matrix = find_interpolant(coor_z, matrix_data[:,0])
+    a = coeff_matrix[i,0]
+    b = coeff_matrix[i, 1]
+    c = coeff_matrix[i, 2]
+    d = coeff_matrix[i, 3]
+    function = lambda x: a*(x-coor_z[i])**3+b*(x-coor_z[i])**2+c*(x-coor_z[i])+d
+    Area_sample.append(1000*quad(function,coor_z[i],coor_z[i+1]))
+
 ####Integration chordwise
-Area_chord= []
-for chord in range(0,Nx):
-    coeff_matrix = find_interpolant(coor_z,matrix_data[:,chord])
-    Area_singlechord = -1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
-    Area_chord.append(Area_singlechord)
-Area_chord = np.array(Area_chord)
+#Area_chord= []
+#for chord in range(0,Nx):
+#    coeff_matrix = find_interpolant(coor_z,matrix_data[:,chord])
+#    Area_singlechord = -1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
+#    Area_chord.append(Area_singlechord)
+#Area_chord = np.array(Area_chord)
 
 
-Area_chord = np.ones(41) * 5540 # with aerodynamic load
+
+Area_chord = np.ones(41) * (5540*la/41) # with aerodynamic load
 #Area_chord = np.ones(41) * 0    # without aerodynamic load
+
 
 
 print(doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1]))
 
-center_pressure = []
-for chord in range(0,Nx):
-    sum_z_load = []
-    sum_load = []
-    for span in range(0,Nz):
-        sum_z_load.append(matrix_data[span,chord]*coor_z[span])
-        sum_load.append(matrix_data[span, chord])
-    center_pressure.append(np.sum(sum_z_load)/np.sum(sum_load))
-center_pressure = np.array(center_pressure)
+#center_pressure = []
+#for chord in range(0,Nx):
+#    sum_z_load = []
+#    sum_load = []
+#    for span in range(0,Nz):
+#        sum_z_load.append(matrix_data[span,chord]*coor_z[span])
+#        sum_load.append(matrix_data[span, chord])
+#    center_pressure.append(np.sum(sum_z_load)/np.sum(sum_load))
+#center_pressure = np.array(center_pressure)
 center_pressure = np.ones(41) * (Ca / 2)
+
 
 arm = np.array(center_pressure-z_hat)
 

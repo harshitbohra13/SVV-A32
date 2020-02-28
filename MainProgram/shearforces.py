@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def shearstress(location,Sy,Sz,T):
     z_sc, y_sc = get_sc() 
-    T += Sy * z_sc
+    # T += Sy * z_sc
     z_c = prop.z_cent - h #z-location from the spar
     # Sy = 1
     # Sz = 1
@@ -92,6 +92,6 @@ def shearstress(location,Sy,Sz,T):
     
     plt.clf()
     plt.plot(np.arange(len(q6_ar)), q6_ar)
-    plt.show()
+    # plt.show()
     return q1_ar,q2_ar,q3_ar,q4_ar,q5_ar,q6_ar
 

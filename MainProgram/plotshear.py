@@ -45,7 +45,7 @@ xII = x2 + xa / 2
 ####################AIRFOIL - STRESSES##########################
 
 
-location = 0.4 #[m] #Location of the cross section
+location = 1 #[m] #Location of the cross section
 h = ha/2 #cm
 
 #Step for each point
@@ -64,7 +64,7 @@ y2=np.linspace(0,h,step)
 z2=np.ones(len(y2))*h
 
 #Fifth Section
-y5=-y2
+y5= -y2
 z5=z2
 
 #First Section
@@ -77,8 +77,8 @@ y6=-y1
 
 #############SHEAR-FLOWS######################
 q1,q2,q3,q4,q5,q6 = shearstress(location,Sy(location),Sz(location),T(location))
-q4 = q4[::-1]
-q6 = q6[::-1]
+# q4 = q4[::-1]
+# q6 = q6[::-1]
 
 
 plt.figure(7)
@@ -90,7 +90,8 @@ plt.scatter(-z2,y2,marker_size,q2)
 plt.scatter(-z5,y5,marker_size,q5)
 plt.scatter(-z1,y1,marker_size,q1)
 plt.scatter(-z6,y6,marker_size,q6)
-cbar = plt.colorbar()
+cbar = plt.colorbar() 
+plt.jet()
 plt.title('Shear Flow Distribution')
 plt.ylabel('y[m]')
 plt.xlabel('-z[m]')

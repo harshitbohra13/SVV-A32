@@ -46,17 +46,27 @@ start_time = time.time()
 file_f100 = open("aerodynamicloadf100.dat", "r")
 lines = file_f100.readlines()
 
+
+
+
 #Variables
 Nz = 81
 Nx = 41
+q_xz = 5.54 / 81 * 1000
 
-#Inserting the values of the text file to a matrix 81 times 41
+#Inserting the values of the text file to a matrix 81 times 41 (81 rows 41 columns)
 matrix_data = np.zeros((Nz,Nx))
 for line in lines:
     row = lines.index(line)
     line = line.replace("\n","")
     magnitude_list = line.split(",")
     matrix_data[row,:] = magnitude_list
+
+#b737 aerodynamic loading data (constant loading)
+#matrix_data = np.full((Nz, Nx), q_xz)
+
+#b737 aerodynamic loading data (no loading)
+#matrix_data = np.full((Nz, Nx), o)
 
 #Z-Coordinate
 theta_z = np.zeros(Nz+1)

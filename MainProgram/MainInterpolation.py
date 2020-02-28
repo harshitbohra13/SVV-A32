@@ -62,11 +62,10 @@ for line in lines:
     magnitude_list = line.split(",")
     matrix_data[row,:] = magnitude_list
 
-#b737 aerodynamic loading data (constant loading)
-#matrix_data = np.full((Nz, Nx), q_xz)
-
-#b737 aerodynamic loading data (no loading)
-#matrix_data = np.full((Nz, Nx), 0)
+if data.loadcase == 'jambent' or data.loadcase == 'jamstraight':
+    matrix_data = np.full((Nz, Nx), q_xz)#b737 aerodynamic loading data (constant loading)
+if data.loadcase == 'bending':
+    matrix_data = np.full((Nz, Nx), 0)#b737 aerodynamic loading data (no loading)
 
 #Z-Coordinate
 theta_z = np.zeros(Nz+1)
@@ -156,8 +155,10 @@ for chord in range(0,Nx):
     Area_singlechord = -1000*integrate_spline(coor_z,coeff_matrix,coor_z[-1])
     Area_chord.append(Area_singlechord)
 Area_chord = np.array(Area_chord)
-#Area_chord = np.ones(41) * 5540
-#Area_chord = np.ones(41) * 0
+
+
+Area_chord = np.ones(41) * 5540 # with aerodynamic load
+#Area_chord = np.ones(41) * 0    # without aerodynamic load
 
 
 print(doubleintegrate_spline(coor_x,find_interpolant(coor_x,Area_chord),coor_x[-1]))
@@ -171,7 +172,7 @@ for chord in range(0,Nx):
         sum_load.append(matrix_data[span, chord])
     center_pressure.append(np.sum(sum_z_load)/np.sum(sum_load))
 center_pressure = np.array(center_pressure)
-#center_pressure = np.ones(41) * (Ca / 2)
+center_pressure = np.ones(41) * (Ca / 2)
 
 arm = np.array(center_pressure-z_hat)
 

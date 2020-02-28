@@ -399,11 +399,12 @@ for node in node_elements:
     Smises_avg.append(average_Smises)
     Ss12_avg.append(average_Ss12)
 
+
 dfbending = pd.DataFrame({
         'node'      : node_loc[:,0], 
         'x'         : node_loc[:,1], 
         'y'         : node_loc[:,2],
-        'z'         : node_loc[:,3],
+        'z'         : node_loc[:,3]-102.5,
         'Smises'    : Smises_avg,
         'Ss12'      : Ss12_avg,
         'U'         : bending["U"][:,1],
@@ -418,11 +419,11 @@ dfbending = pd.DataFrame({
         'y+Uy'      : node_loc[:,2]+bending["U"][:,3],
         'z+Uz'      : node_loc[:,3]+bending["U"][:,4]
         })
-    
+
 ### ------------------------------------------------------------------------###
 ###          load case: jam bent     
 ### ------------------------------------------------------------------------###
-    
+
 Smises_avg = []
 Ss12_avg   = []
 for node in node_elements:
@@ -440,11 +441,12 @@ for node in node_elements:
     Smises_avg.append(average_Smises)
     Ss12_avg.append(average_Ss12)
 
+
 dfjambent = pd.DataFrame({
         'node'      : node_loc[:,0], 
         'x'         : node_loc[:,1], 
         'y'         : node_loc[:,2],
-        'z'         : node_loc[:,3],
+        'z'         : node_loc[:,3]-102.5,
         'Smises'    : Smises_avg,
         'Ss12'      : Ss12_avg,
         'U'         : jambent["U"][:,1],
@@ -460,11 +462,11 @@ dfjambent = pd.DataFrame({
         'z+Uz'      : node_loc[:,3]+jambent["U"][:,4]
         })
 
-    
+
 ### ------------------------------------------------------------------------###
 ###          load case: jam straight     
 ### ------------------------------------------------------------------------###
-    
+
 Smises_avg = []
 Ss12_avg   = []
 for node in node_elements:
@@ -482,11 +484,12 @@ for node in node_elements:
     Smises_avg.append(average_Smises)
     Ss12_avg.append(average_Ss12)
 
+
 dfjamstraight = pd.DataFrame({
         'node'      : node_loc[:,0], 
         'x'         : node_loc[:,1], 
         'y'         : node_loc[:,2],
-        'z'         : node_loc[:,3],
+        'z'         : node_loc[:,3]-102.5,
         'Smises'    : Smises_avg,
         'Ss12'      : Ss12_avg,
         'U'         : jamstraight["U"][:,1],
@@ -501,6 +504,4 @@ dfjamstraight = pd.DataFrame({
         'y+Uy'      : node_loc[:,2]+jamstraight["U"][:,3],
         'z+Uz'      : node_loc[:,3]+jamstraight["U"][:,4]
         })
-
-### ===========================================================================
 

@@ -139,17 +139,6 @@ ax.set_ylabel('Z-Axis [m]')
 ax.set_zlabel('Aerodynamic Loading [kPa]')
 #plt.show()
 
-#############INTEGRATION#############
-Area_sample=[]
-for i in range(0,Nz-1):
-    coeff_matrix = find_interpolant(coor_z, matrix_data[:,0])
-    a = coeff_matrix[i,0]
-    b = coeff_matrix[i, 1]
-    c = coeff_matrix[i, 2]
-    d = coeff_matrix[i, 3]
-    function = lambda x: a*(x-coor_z[i])**3+b*(x-coor_z[i])**2+c*(x-coor_z[i])+d
-    Area_sample.append(1000*quad(function,coor_z[i],coor_z[i+1]))
-
 ####Integration chordwise
 Area_chord= []
 for chord in range(0,Nx):

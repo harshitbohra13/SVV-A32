@@ -85,8 +85,8 @@ y6=-y1
 output = np.array([0,0,0,0,0])
 
 
-#for x in xrange[1:-1]:
-for x in [0.4,0.8,1.2]:
+for x in xrange[1:-1]:
+#for x in [0.4,0.8,1.2]:
 
     #############SHEAR-FLOWS############################################
     q1,q2,q3,q4,q5,q6 = shearstress(x,Sy(x),Sz(x),T(x))
@@ -103,13 +103,13 @@ for x in [0.4,0.8,1.2]:
     
     def VonMises(My, Mz,tau_yz,z, y):
 
-    sigma_xx_z = My * (z - z_hat) / Iyy
-    sigma_xx_y = Mz * y / Izz
-
-    sigma_xx_total = sigma_xx_y + sigma_xx_z
-    sigma_vm =  np.sqrt(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
-
-    return sigma_vm
+        sigma_xx_z = My * (z - z_hat) / Iyy
+        sigma_xx_y = Mz * y / Izz
+    
+        sigma_xx_total = sigma_xx_y + sigma_xx_z
+        sigma_vm =  np.sqrt(0.5 * ((sigma_xx_total**2) + ((-sigma_xx_total)**2)) + 3*(tau_yz ** 2))
+    
+        return sigma_vm
     
     sec_1 = []
     sec_2 = []

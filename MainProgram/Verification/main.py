@@ -1,41 +1,29 @@
 ### Importing required packages
 import numpy as np
-import Energy
-import Stiffness
-import Stress
+import Verification.Energy as Energy
+import Verification.Stiffness as Stiffness
+import Verification.Stress as Stress
 import math as m
 
 ######################## Part I - parameters as in assignment #######################################
 aircraft = "F100" # Write either A320, F100, CRJ700 or Do228 (bear in mind capitals); this is used for aerodynamic loading
-Ca = 0.605  # m
-la = 2.661  # m
-x1 = 0.172  # m
-x2 = 1.211  # m
-x3 = 2.591  # m
-xa = 0.35   # m
-ha = 0.205  # m
+Ca = 0.505  # m
+la = 1.611  # m
+x1 = 0.125  # m
+x2 = 0.498  # m
+x3 = 1.494  # m
+xa = 0.245 # m
+ha = 0.161  # m
 tsk = 1.1/1000  # m
-tsp = 2.8/1000  # m
+tsp = 2.4/1000  # m
 tst = 1.2/1000  # m
-hst = 16./1000   # m
-wst = 19./1000   # m
-nst = 15  # -
-d1 = 0.01154  # m
-d3 = 0.01840  # m
-theta = m.radians(28)  # rad
-P = 97.4*1000  # N
-
-Ca = 0.505     # chord length aileron [m]
-la = 1.611     # span of the aileron [m]
-ha = 16.1e-2   # aileron height [m] 
-
-tsk = 1.1e-3   # skin thickness [m]
-tsp = 2.4e-3   # spar thickness [m]
-
-nst = 11      # number of stiffeners [-]
-tst = 1.2e-3   # thickness of stiffener [m]
-hst = 1.3e-2   # height of stiffener [m]
-wst = 1.7e-2   # width of stiffener [m]
+hst = 13./1000   # m
+wst = 17./1000   # m
+nst = 11  # -
+d1 = 0.00389 # m
+d3 = 0.01245  # m
+theta = m.radians(30)  # rad
+P = 49.2*1000  # N
 
 ######################## Part II - bending stiffness calculations #######################################
 ### Create the cross-section object
@@ -60,25 +48,51 @@ _ = crosssection.yc                 # y-coordinate of the centroid
 _ = crosssection.zc                 # z-coordinate of the centroid
 _ = crosssection.Iyy                # moment of inertia about y-axis
 _ = crosssection.Izz                # moment of inertia about z-axis
-print('y,z =',crosssection.yc,' ,',crosssection.zc)
-print('Iyy,Izz =',crosssection.Iyy,', ',crosssection.Izz)
-######################### Part III - Torsional stiffness calculations #######################################
+
+######################## Part III - Torsional stiffness calculations #######################################
 ### Primary functions
 """ If you desire, you may disable this line, and manually overwrite the values listed between lines 60-62"""
 crosssection.compute_shearcenter()   # Run the calculations
 crosssection.compute_torsionalstiffness()   # Run the calculations
+
+h = crosssection.ha / 2.
+A1 = m.pi * h ** 2 / 2.
+A2 = (crosssection.Ca - h) * h
+
+A = np.array([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])
+b = np.array([0., 0., 0.])
+
+### First row
+A[0, 0] = 2. * A1
+A[0, 1] = 2. * A2
+b[0] = 1
+
+### Second row
+A[1, 0] = (h * m.pi / crosssection.tsk + 2 * h / crosssection.tsp) / (2 * A1)
+A[1, 1] = (-2 * h / crosssection.tsp) / (2 * A1)
+A[1, 2] = -1.
+b[1] = 0.
+
+### Third row
+A[2, 0] = (-2 * h / crosssection.tsp) / (2 * A2)
+A[2, 1] = (2 * crosssection.lsk / crosssection.tsk + 2 * h / crosssection.tsp) / (2 * A2)
+A[2, 2] = -1
+b[2] = 0.
+
+solution = np.linalg.solve(A, b)
+crosssection.J = 1. / solution[-1]
 
 ### Access to important results
 """" If you desire, you can manually overwrite these values. """
 _ = crosssection.ysc                 # y-coordinate of the centroid
 _ = crosssection.zsc                 # z-coordinate of the centroid
 _ = crosssection.J                   # torsional constant
-#
+
 ######################## Part IV - Deflection calculations #######################################
 ### Definition of additional parameters
 N = 20     # Number of basis functions to use in Rayleigh-Ritz method (total number of coefficients is 3*N)
-E = 72.9*10**9       # E-modulus (Pa)
-G = 27.1*10**9       # G-modulus (Pa)
+E = 73.1*10**9       # E-modulus (Pa)
+G = 28*10**9       # G-modulus (Pa)
 
 ### Create the aileron object
 """ Merges the cross-sectional properties with the spanwise properties (length and material properties)"""
@@ -95,7 +109,7 @@ aileron.addbcss(x3,0.,-ha/2.,m.pi/2-theta,0)
 aileron.addbcss(x2-xa/2.,ha/2.,0,m.pi/2.-theta,0)
 
 """"Define your applied loading; see manual for explanations."""
-aileron.addfpl(x2+xa/2.,ha/2.,0,m.pi/2.-theta,P)
+aileron.addfpl(x2+xa/2.,ha/2.,0,m.pi/2.-theta,-P)
 
 ### Primary functions
 """ The following line computes the deflections. If you do not want to include the aerodynamic loading, simply write
@@ -169,7 +183,7 @@ _ = aileron.sol.coef        # Resulting coefficients, collected in bar(alpha) (a
 Stressobject = Stress.Stressstate(crosssection)
 
 ### Define the forces and moments for which you want to know the stress distributions
-x = 0.5
+x = 0.4
 Sy = aileron.Sy(x)
 Sz = aileron.Sz(x)
 My = aileron.My(x)
@@ -179,6 +193,38 @@ T = aileron.T(x)
 ### Primary functions
 """"The following line should never be disabled, as its results are used in the auxiliary functions"""
 Stressobject.compute_unitstressdistributions()
+
+h = Stressobject.ha / 2.
+A1 = m.pi * h ** 2 / 2.
+A2 = (Stressobject.Ca - h) * h
+
+A = np.array([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])
+b = np.array([0., 0., 0.])
+
+### First row
+A[0, 0] = 2. * A1
+A[0, 1] = 2. * A2
+b[0] = -1
+
+### Second row
+A[1, 0] = (h * m.pi / Stressobject.tsk + 2 * h / Stressobject.tsp) / (2 * A1)
+A[1, 1] = (-2 * h / Stressobject.tsp) / (2 * A1)
+A[1, 2] = -1.
+b[1] = 0.
+
+### Third row
+A[2, 0] = (-2 * h / Stressobject.tsp) / (2 * A2)
+A[2, 1] = (2 * Stressobject.lsk / Stressobject.tsk + 2 * h / Stressobject.tsp) / (2 * A2)
+A[2, 2] = -1
+b[2] = 0.
+
+solution = np.linalg.solve(A, b)
+Stressobject.Tq1f = solution[0]
+Stressobject.Tq2f = -solution[0] + solution[1]
+Stressobject.Tq3f = solution[1]
+Stressobject.Tq4f = solution[1]
+Stressobject.Tq5f = -solution[0] + solution[1]
+Stressobject.Tq6f = solution[0]
 
 ### Auxiliary functions
 Stressobject.compute_stressdistributions(Sy,Sz,My,Mz,T)
@@ -224,3 +270,4 @@ _ = Stressobject.q6f(theta)             # Compute the shear flow distribution in
 _ = Stressobject.sigma6f(theta)         # Compute the direct stress distribution in region 6
 _ = Stressobject.vm6(theta)             # Compute the Von Mises stress distribution in region 6
 _, _ = Stressobject.coord6(theta)       # Compute the z,y-coordinates for region 6
+

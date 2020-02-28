@@ -86,6 +86,7 @@ X,Z = np.meshgrid(coor_x,coor_z)
 Y = matrix_data
 
 #Plotting the surfaces
+
 plt.figure(1)
 cp = plt.contour(X,Z,Y)
 plt.colorbar(cp)
@@ -106,6 +107,7 @@ ax.plot_wireframe(X,Z,Y,cmap='magma')
 ax.set_xlabel('X-Axis [m] ~ Spanwise')
 ax.set_ylabel('Z-Axis [m] ~ Chordwise ')
 ax.set_zlabel('Aerodynamic Loading [kPa]')
+
 
 #########INTERPOLATION################
 #Plot the interpolation
@@ -138,7 +140,8 @@ for span in range(0,Nz):
 ax.set_xlabel('X-Axis [m]')
 ax.set_ylabel('Z-Axis [m]')
 ax.set_zlabel('Aerodynamic Loading [kPa]')
-#plt.show()
+plt.show()
+
 
 #############INTEGRATION#############
 Area_sample=[]

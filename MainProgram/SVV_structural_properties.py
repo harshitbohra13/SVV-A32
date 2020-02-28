@@ -134,7 +134,7 @@ J = T/(Gdsigmadz)
 print("J =",J)
 
 #============================ PLOTTING ====================================
-
+'''
 fig, ax = plt.subplots()
 
 ycirc = np.linspace(0,0.5*ha,1000)
@@ -167,6 +167,7 @@ ax.legend()
 ax.set_xlim(0.1*Ca, -1.05*Ca)
 ax.set_ylim(-ha, ha)
 # plt.show()
+'''
 
 #========================== Verification ==================================
 

@@ -22,7 +22,7 @@ for line in lines:
     matrix_data[row,:] = magnitude_list
 
 #Aerodynamic data
-test_data = matrix_data[:,20] #chordline
+test_data = matrix_data[:,20] #chordline, here chord line 21 is taken
 
 #z-coordinates
 theta_z = np.zeros(Nz+1)
@@ -38,10 +38,23 @@ Coeff_matrix = find_interpolant(coor_z,test_data)
 
 # computing the spline integral
 area = integrate_spline(coor_z,Coeff_matrix,coor_z[-1])
-print(area)
+print("cubic approximation =", area)
 
+#calculates linear approximation
+def linear_integral(nodes, values):
+    area = 0
+    for i in range(len(nodes)-1):
+        dA = - 0.5 * (values[i+1] + values[i]) * abs((nodes[i+1] -nodes[i])) #minus sign added as the aerodynamic load points down
+        area += dA
+    return area
 
-plt.plot(coor_z, test_data)
-plt.show()
+check = linear_integral(coor_z, test_data)
+print("linear approximation =", check)
+print()
+print("percentage difference is:",((area - check)/check)*100,"%")
+
+#plotting
+# plt.plot(coor_z, test_data)
+# plt.show()
 
 
